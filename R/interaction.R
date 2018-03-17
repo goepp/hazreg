@@ -168,8 +168,7 @@ hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
     return(band_hessian)
   }
 }
-
-ridge_solver_interaction <- function(O, R, pen, maxiter = 1000, verbose = FALSE,
+ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FALSE,
                                      use_band = TRUE) {
   old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
@@ -193,8 +192,32 @@ ridge_solver_interaction <- function(O, R, pen, maxiter = 1000, verbose = FALSE,
   }
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
-wridge_solver_interaction <- function(O, R, pen, weights_age, weights_cohort,
-                                      maxiter = 1000, use_band = TRUE, old_par = NULL,
+#' Computes the ridge regularized estimates of the interaction model
+#'
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @param pen The penalty constant.
+#' @param maxiter The maximal number of iteractions of the Newton-Raphson procedure.
+#' @param verbose Whether to display the progress of the Newton-Raphson procedure.
+#' @param use_band Whether to use faster inversion of the hessian function. \code{TRUE}
+#' @param weights_age weights of the age differences in the log-hazard. See ADD REFERENCE SHEET
+#' @param weights_cohort weights of the cohort differences in the log-hazard. See ADD REFERENCE SHEET
+#' @param old_par initial point of the iteration. The default choice is \code{0}
+#' is recommended
+#' @return The vector estimate of the ridge regularized interaction model.
+#' @examples
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' pen <-  50
+#' ridge <- ridge_solver_interaction(O, R, pen)
+#' ridge$par
+#' ridge$iter
+ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
+                                      weights_cohort = NULL, use_band = TRUE,
+                                      maxiter = 1000, old_par = NULL,
                                       verbose = FALSE) {
   if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
@@ -220,6 +243,7 @@ wridge_solver_interaction <- function(O, R, pen, weights_age, weights_cohort,
   }
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
+#' @rdname ridge_solver_interaction
 aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
                                       use_band = TRUE,
                                       maxiter = 1000 * length(pen_vect)) {
@@ -234,10 +258,11 @@ aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
   old_par <- rep(0, J * K)
   ind_pen <- 1
   for (iter in 1:maxiter) {
-    par <- wridge_solver_interaction(O = O, R = R, pen = pen_vect[ind_pen], weights_age = weights_age,
-                                     weights_cohort = weights_cohort,
-                                     maxiter = 1000, old_par = old_par,
-                                     use_band = use_band)$par
+    par <- ridge_solver_interaction(O = O, R = R, pen = pen_vect[ind_pen],
+                                    weights_age = weights_age,
+                                    weights_cohort = weights_cohort,
+                                    maxiter = 1000, old_par = old_par,
+                                    use_band = use_band)$par
     eta <- matrix(par, K, J)
     weights_age[, ]    <- 1 / (t(apply(eta, 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(eta, 2, diff) ^ 2 + epsilon_cohort ^ 2)
