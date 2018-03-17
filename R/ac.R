@@ -41,6 +41,7 @@ par2haz_ac <- function(par, J, K) {
 }
 #' Negative lok-likelihood in the age-cohort model
 #'
+#' @family ac_likelihood
 #' @param par parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}
 #' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
@@ -62,6 +63,7 @@ loglik_ac <- function(par, O, R) {
 }
 #' First order derivate of the negative lok-likelihood in the age-cohort model
 #'
+#' @family ac_likelihood
 #' @param par parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}
 #' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
@@ -90,6 +92,7 @@ score_ac <- function(par, O, R) {
 }
 #' Second order derivate of the negative lok-likelihood in the age-cohort model
 #'
+#' @family ac_likelihood
 #' @param par parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}
 #' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
@@ -126,6 +129,17 @@ hessian_ac <- function(par, O, R) {
     "dimnames<-"(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1)),
                       c("mu", rep("alpha", J - 1), rep("beta", K - 1))))
 }
+#' Solver of the Age-cohort model
+#'
+#' @family ac_likelihood
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @return The maximum likelihood estimate of the Age-Cohort Model. Minimization is made
+#' using the Newton-Raphson algorithm (\url{https://en.wikipedia.org/wiki/Newton%27s_method})
+#' @seealso \code{\link{exhaustive_stat_2d}}, \code{\link{exhaustive_stat_1d}}
+#' @examples
+#' par <- rnorm(ncol(O) + nrow(O))
+#' hessian_ac(par, O, R)
 solver_ac <- function(O, R, maxiter = 1000, verbose = FALSE) {
   K <- nrow(O)
   J <- ncol(O)
