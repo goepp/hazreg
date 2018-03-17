@@ -41,6 +41,21 @@ par2haz_sel_interaction <- function(par, sel, J, K, haz.log = FALSE) {
 loglik_sel_interaction <- function(par, O, R) {
   sum(exp(par) * R - "[<-"(par * O, which(is.nan(par * O), arr.ind = TRUE), 0))
 }
+#' Negative lok-likelihood in the interaction model
+#'
+#' @family interaction_likelihood
+#' @param par parameters of the interaction model in the form \code{c(mu, alpha and beta)}
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @return The negative log-likelihood as described in TODO NAME OF REFERENCE SHEET
+#' @examples
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' par <- rnorm(J * K)
+#' loglik_interaction(par, O, R)
 loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
                                weights_cohort = NULL) {
   K <- nrow(O)
@@ -54,6 +69,22 @@ loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
   )
   sum(exp(eta) * R - eta * O) + pen_term
 }
+#' First order derivate of the negative lok-likelihood in the interaction model
+#'
+#' @family likelihood_likelihood
+#' @param par parameters of the interaction model in the form \code{c(mu, alpha and beta)}
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @return The vector of derivatives of the negative log-likelihood as
+#' described in TODO NAME OF REFERENCE SHEET
+#' @examples
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' par <- rnorm(J * K)
+#' score_interaction(par, O, R)
 score_interaction <- function(par, O, R, pen, weights_age = NULL,
                               weights_cohort = NULL) {
   K <- nrow(O)
@@ -69,8 +100,24 @@ score_interaction <- function(par, O, R, pen, weights_age = NULL,
                       rbind(weights_cohort * apply(eta, 2, diff), 0))
   unpenalized_score + pen_term
 }
+#' Second order derivate of the negative lok-likelihood in the interaction model
+#'
+#' @family ac_likelihood
+#' @param par parameters of the interaction model in the form \code{c(mu, alpha and beta)}
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @return The matrix of second order derivatives of the negative log-likelihood as
+#' described in TODO NAME OF REFERENCE SHEET
+#' @examples
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' par <- rnorm(J * K)
+#' hessian_interaction(par, O, R)
 hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
-                                weights_cohort = NULL, band = FALSE) {
+                                weights_cohort = NULL, use_band = FALSE) {
   K <- nrow(O)
   J <- ncol(O)
   if (any(dim(O) != dim(R))) {
@@ -121,8 +168,9 @@ hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
     return(band_hessian)
   }
 }
+
 ridge_solver_interaction <- function(O, R, pen, maxiter = 1000, verbose = FALSE,
-                                     use_band = FALSE) {
+                                     use_band = TRUE) {
   old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (verbose) {
@@ -130,14 +178,14 @@ ridge_solver_interaction <- function(O, R, pen, maxiter = 1000, verbose = FALSE,
         make_plot() %>% print()
     }
     if (use_band) {
-      par <- old_par - bandsolve(hessian_interaction(old_par, O, R, pen, band = TRUE),
+      par <- old_par - bandsolve(hessian_interaction(old_par, O, R, pen, use_band = TRUE),
                                  score_interaction(old_par, O, R, pen))
     } else {
-      par <- old_par - Solve(hessian_interaction(old_par, O, R, pen, band = FALSE),
+      par <- old_par - Solve(hessian_interaction(old_par, O, R, pen, use_band = FALSE),
                              score_interaction(old_par, O, R, pen))
     }
     if (sum(is.na(abs(par - old_par) / abs(old_par)))) break
-    if (max(abs(par - old_par) / abs(old_par)) <= sqrt(.Machine$double.eps)) break
+    if (max(abs(par - old_par) / abs(old_par)) <= sqrt(1e-8)) break
     old_par <- par
   }
   if (iter == maxiter) {
@@ -146,16 +194,25 @@ ridge_solver_interaction <- function(O, R, pen, maxiter = 1000, verbose = FALSE,
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
 wridge_solver_interaction <- function(O, R, pen, weights_age, weights_cohort,
-                                      maxiter = 1000, verbose = FALSE, old_par = NULL) {
+                                      maxiter = 1000, use_band = TRUE, old_par = NULL,
+                                      verbose = FALSE) {
   if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
-    if (verbose) old_par %>% par2grid_interaction(cuts_age, cuts_cohort) %>%
+    if (verbose) {
+      old_par %>% par2grid_interaction(cuts_age, cuts_cohort) %>%
       make_plot() %>% print()
+    }
+    if (use_band) {
     par <- old_par - bandsolve(
-      hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, band = TRUE),
+      hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
       score_interaction(old_par, O, R, pen, weights_age, weights_cohort))
+    } else {
+      par <- old_par - Solve(
+        hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
+        score_interaction(old_par, O, R, pen, weights_age, weights_cohort))
+    }
     if (sum(is.na(abs(par - old_par) / abs(old_par)))) break
-    if (max(abs(par - old_par) / abs(old_par)) <= sqrt(.Machine$double.eps)) break
+    if (max(abs(par - old_par) / abs(old_par)) <= sqrt(1e-8)) break
     old_par <- par
   }
   if (iter == maxiter) {
@@ -164,8 +221,10 @@ wridge_solver_interaction <- function(O, R, pen, weights_age, weights_cohort,
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
 aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
+                                      use_band = TRUE,
                                       maxiter = 1000 * length(pen_vect)) {
-  sel_ls <- par_sel_ls <- haz_sel_ls <- bic_ls <- aic_ls <- ebic_ls <- vector('list', length(pen_vect))
+  sel_ls <- par_sel_ls <- haz_sel_ls <- vector('list', length(pen_vect))
+  bic <- aic <- ebic <- NA * pen_vect
   epsilon_age <- 1e-6
   epsilon_cohort <- 1e-6
   K <- nrow(O)
@@ -177,7 +236,8 @@ aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
   for (iter in 1:maxiter) {
     par <- wridge_solver_interaction(O = O, R = R, pen = pen_vect[ind_pen], weights_age = weights_age,
                                      weights_cohort = weights_cohort,
-                                     maxiter = 1000, old_par = old_par)$par
+                                     maxiter = 1000, old_par = old_par,
+                                     use_band = use_band)$par
     eta <- matrix(par, K, J)
     weights_age[, ]    <- 1 / (t(apply(eta, 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(eta, 2, diff) ^ 2 + epsilon_cohort ^ 2)
@@ -198,11 +258,11 @@ aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
         '[<-'(which(is.nan(log(exhaust_sel$O / exhaust_sel$R))), 0)
       haz_sel_ls[[ind_pen]] <- par2haz_sel_interaction(par_sel_ls[[ind_pen]], sel_ls[[ind_pen]],
                                                        J, K, haz.log = FALSE)
-      bic_ls[[ind_pen]] <- log(sample_size) * length(par_sel_ls[[ind_pen]]) +
+      bic[ind_pen] <- log(sample_size) * length(par_sel_ls[[ind_pen]]) +
         2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
-      ebic_ls[[ind_pen]] <- bic_ls[[ind_pen]] +
+      ebic[ind_pen] <- bic[ind_pen] +
         2 * log(choose(nrow(O) * ncol(O), length(par_sel_ls[[ind_pen]])))
-      aic_ls[[ind_pen]] <- 2 * length(par_sel_ls[[ind_pen]]) +
+      aic[ind_pen] <- 2 * length(par_sel_ls[[ind_pen]]) +
         2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
       ind_pen <-  ind_pen + 1
     }
@@ -212,6 +272,6 @@ aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
   if (iter == maxiter) {
     warning("Warning: aridge did not converge")
   }
-  return(list("sel" = sel_ls, "par" = par_sel_ls,
-              "haz" = haz_sel_ls, "bic" = bic_ls, "aic" = aic_ls, 'ebic' = ebic_ls))
+  return(list("sel" = sel_ls, "par" = par_sel_ls, "haz" = haz_sel_ls,
+              "bic" = bic, "aic" = aic, 'ebic' = ebic))
 }
