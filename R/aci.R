@@ -53,17 +53,6 @@ par2haz_aci <- function(par, J, K) {
   ext_delta <- "[<-"(matrix(0, K, J), -1, -1, matrix(par[-(1:(J + K - 1))], K - 1, J - 1))
   exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta)
 }
-haz2grid <- function(haz, cuts_age, cuts_cohort) {
-  haz %>%
-    unname() %>%
-    melt(varnames = c("cohort", "age")) %>%
-    mutate(age = levels(cut(-1, breaks = c(0, cuts_age, Inf),
-                            right = FALSE, dig.lab = 3))[matrix(age)]) %>%
-    mutate(age = factor(age, levels = unique(age))) %>%
-    mutate(cohort = levels(cut(-1, breaks = c(0, cuts_cohort, Inf),
-                               right = FALSE, dig.lab = 4))[matrix(cohort)]) %>%
-    mutate(cohort = factor(cohort, levels = unique(cohort)))
-}
 par_sel2par_aci <- function(par_sel, sel) {
   J <- ncol(sel) + 1
   K <- nrow(sel) + 1

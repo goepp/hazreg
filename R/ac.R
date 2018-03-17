@@ -1,3 +1,15 @@
+#' Create hazard from parameters of the Age-Cohort Model
+#'
+#' @param par parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}
+#' @param J number of age intervals
+#' @param K number of cohort intervals
+#' @return The hazard rate in a matrix of size K * J:
+#' \deqn{\lambda_{a, c} = \exp (\mu + \alpha_{a} + \beta_{c})}
+#' @examples
+#' J <- 10
+#' K <- 15
+#' par <- rnorm(K + J - 1)
+#' persp(par2haz_ac(par, J, K))
 par2haz_ac <- function(par, J, K) {
   if (length(par) != J + K - 1) {
     stop("Error: length of param not equal to J + K - 1")
@@ -7,10 +19,21 @@ par2haz_ac <- function(par, J, K) {
   ext_beta <- c(0, par[(J + 1):(J + K - 1)])
   exp(outer(ext_beta, mu + ext_alpha, FUN = "+"))
 }
+haz2grid_ac <- function(haz, cuts_age, cuts_cohort) {
+  haz %>%
+    unname() %>%
+    melt(varnames = c("cohort", "age")) %>%
+    mutate(age = levels(cut(-1, breaks = c(0, cuts_age, Inf),
+                            right = FALSE, dig.lab = 3))[matrix(age)]) %>%
+    mutate(age = factor(age, levels = unique(age))) %>%
+    mutate(cohort = levels(cut(-1, breaks = c(0, cuts_cohort, Inf),
+                               right = FALSE, dig.lab = 4))[matrix(cohort)]) %>%
+    mutate(cohort = factor(cohort, levels = unique(cohort)))
+}
 par2grid_ac <- function(par, cuts_age, cuts_cohort) {
   J <- length(cuts_age) + 1
   K <- length(cuts_cohort) + 1
-  par2haz_ac(par, J, K) %>% haz2grid(cuts_age, cuts_cohort)
+  par2haz_ac(par, J, K) %>% haz2grid_ac(cuts_age, cuts_cohort)
 }
 par2haz_ac <- function(par, J, K) {
   if (length(par) != J + K - 1) stop("Error: length of param not equal to J + K - 1")
@@ -27,7 +50,12 @@ par2haz_ac <- function(par, J, K) {
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
 #' @return The negative log-likelihood as described in TODO NAME OF REFERENCE SHEET
 #' @examples
-#' par <- rnorm(ncol(O) + nrow(O))
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' par <- rnorm(J + K - 1)
 #' loglik_ac(par, O, R)
 loglik_ac <- function(par, O, R) {
   K <- nrow(O)
@@ -50,7 +78,12 @@ loglik_ac <- function(par, O, R) {
 #' @return The vector of derivatives of the negative log-likelihood as
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
-#' par <- rnorm(ncol(O) + nrow(O))
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' par <- rnorm(J + K - 1)
 #' score_ac(par, O, R)
 score_ac <- function(par, O, R) {
   K <- nrow(O)
@@ -79,7 +112,12 @@ score_ac <- function(par, O, R) {
 #' @return The matrix of second order derivatives of the negative log-likelihood as
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
-#' par <- rnorm(ncol(O) + nrow(O))
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' par <- rnorm(J + K - 1)
 #' hessian_ac(par, O, R)
 hessian_ac <- function(par, O, R) {
   K <- nrow(O)
