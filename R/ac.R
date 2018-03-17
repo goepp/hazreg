@@ -7,26 +7,6 @@ par2haz_ac <- function(par, J, K) {
   ext_beta <- c(0, par[(J + 1):(J + K - 1)])
   exp(outer(ext_beta, mu + ext_alpha, FUN = "+"))
 }
-loglik_ac <- function(par, O, R) {
-  K <- nrow(O); J <- ncol(O)
-  if (length(par) != J + K - 1) {
-    stop("Error: length of param not equal to J + K - 1")
-  }
-  mu <- par[1]
-  alpha <- c(0, par[2:J])
-  beta <- c(0, par[(J + 1):(J + K - 1)])
-  eta <- outer(beta, mu + alpha, FUN = "+")
-  sum(exp(eta) * R - eta * O)
-}
-mle_ac <- function(O, R) {
-  K <- nrow(O)
-  J <- ncol(O)
-  par_init <- rep(0, J + K - 1)
-  par_res <- optim(par_init, fn = loglik_ac, O = O, R = R,
-                   method = "BFGS", control = list(maxit = 5000))$par
-  haz_res <- par2haz_ac(par_res, J, K)
-  list("par" = par_res, "haz" = haz_res)
-}
 par2grid_ac <- function(par, cuts_age, cuts_cohort) {
   J <- length(cuts_age) + 1
   K <- length(cuts_cohort) + 1
@@ -145,12 +125,14 @@ solver_ac <- function(O, R, maxiter = 1000, verbose = FALSE) {
   J <- ncol(O)
   old_par <- rep(0, J + K - 1)
   for (iter in 1:maxiter) {
-    if (verbose) old_par %>% par2grid_ac(cuts_age, cuts_cohort) %>%
+    if (verbose) {
+      old_par %>% par2grid_ac(cuts_age, cuts_cohort) %>%
       make_plot() %>% print()
+    }
     par <- old_par - Solve(hessian_ac(old_par, O, R),
                            score_ac(old_par, O, R))
     if (sum(is.na(abs(par - old_par) / abs(old_par)))) break
-    if (max(abs(par - old_par) / abs(old_par)) <= sqrt(.Machine$double.eps)) break
+    if (max(abs(par - old_par) / abs(old_par)) <= sqrt(1e-8)) break
     old_par <- par
   }
   if (iter == maxiter) {
