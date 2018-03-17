@@ -38,6 +38,9 @@ par2haz_sel_interaction <- function(par, sel, J, K, haz.log = FALSE) {
     return(exp(eta))
   }
 }
+loglik_sel_interaction <- function(par, O, R) {
+  sum(exp(par) * R - "[<-"(par * O, which(is.nan(par * O), arr.ind = TRUE), 0))
+}
 loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
                                weights_cohort = NULL) {
   K <- nrow(O)
@@ -50,9 +53,6 @@ loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
       sum(weights_cohort * apply(eta, 2, diff) ^ 2)
   )
   sum(exp(eta) * R - eta * O) + pen_term
-}
-loglik_sel_interaction <- function(par, O, R) {
-  sum(exp(par) * R - "[<-"(par * O, which(is.nan(par * O), arr.ind = TRUE), 0))
 }
 score_interaction <- function(par, O, R, pen, weights_age = NULL,
                               weights_cohort = NULL) {

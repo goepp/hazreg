@@ -1,3 +1,16 @@
+#' foo: A package for computating the notorious bar statistic.
+#'
+#' The foo package provides three categories of important functions:
+#' foo, bar and baz.
+#'
+#' @section Utility functions
+#' @section The Age-cohort model
+#' @section The Age-cohort interaction model
+#' @section The interaction model
+#'
+#' @docType package
+#' @name hazreg
+NULL
 #' Generate geometric sequences
 #'
 #' @param x A strictly positive number
@@ -22,8 +35,8 @@ reverselog_trans <- function(base = exp(1)) {
 #' @param mu Constant part of the log-hazard
 #' @param age_coef Age-effect parameter sequence
 #' @param cohort_coef Cohort-effect parameter sequence
-#' @param age_seq
-#' @param cohort_seq
+#' @param age_seq Age discretizatioin vector
+#' @param cohort_seq Cohort discretizatioin vector
 #' @param islet_ls List of parameters of the interaction terms.
 #' @return
 #' The interactions terms are densities of two dimensional normal distributions.

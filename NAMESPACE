@@ -1,3 +1,0 @@
-exportPattern("^[[:alpha:]]+")
-importFrom("stats", "filter", "model.matrix",
-           "optim", "runif")
