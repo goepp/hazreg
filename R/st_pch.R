@@ -40,7 +40,7 @@ exhaustive_stat_graph <- function(sample, cuts) {
   R <- temp[2, ] %>% do.call(rbind, .)
   list('O' = O, 'R' = R)
 }
-loglik_graph <- function(par, exhaust, adj, pen = NULL, weights = NULL) {
+loglik_graph  <- function(par, exhaust, adj, pen = NULL, weights = NULL) {
   K <- nrow(exhaust$O)
   J <- ncol(exhaust$O)
   eta <- matrix(par, K, J)
@@ -66,7 +66,7 @@ loglik_graph <- function(par, exhaust, adj, pen = NULL, weights = NULL) {
   # Return the penalized negative log-likelihood
   unpenalized + spatial_pen + temporal_pen
 }
-score_graph <- function(par, exhaust, adj, pen = NULL, weights = NULL) {
+score_graph   <- function(par, exhaust, adj, pen = NULL, weights = NULL) {
   K <- nrow(exhaust$O)
   J <- ncol(exhaust$O)
   eta <- matrix(par, K, J)
