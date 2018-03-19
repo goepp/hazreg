@@ -30,9 +30,17 @@ par2grid_aci <- function(par, cuts_age, cuts_cohort) {
   K <- length(cuts_cohort) + 1
   par_df <- par2haz_aci(unname(par), J, K) %>%
     melt(varnames = c("cohort", "age")) %>%
-    mutate(age = levels(cut(-1, breaks = c(0, cuts_age, Inf), right = FALSE, dig.lab = 3))[matrix(age)]) %>%
+    mutate(age = levels(cut(
+      -1,
+      breaks = c(0, cuts_age, Inf),
+      right = FALSE,
+      dig.lab = 3))[matrix(age)]) %>%
     mutate(age = factor(age, levels = unique(age))) %>%
-    mutate(cohort = levels(cut(-1, breaks = c(0, cuts_cohort, Inf), right = FALSE, dig.lab = 4))[matrix(cohort)]) %>%
+    mutate(cohort = levels(cut(
+      -1,
+      breaks = c(0, cuts_cohort, Inf),
+      right = FALSE,
+      dig.lab = 4))[matrix(cohort)]) %>%
     mutate(cohort = factor(cohort, levels = unique(cohort)))
   par_df
 }
@@ -50,7 +58,6 @@ par_sel2par_aci <- function(par_sel, sel) {
 }
 #' @export
 valve2sel_aci <- function(valve_age, valve_cohort, epsilon = 1e-8) {
-  library(igraph)
   if (any(dim(valve_age) != dim(valve_cohort))) {
     stop("Error: dimensions of valve matrices must agree")
   }
@@ -125,7 +132,8 @@ loglik_sel_aci_old <- function(par, O, R, sel) {
 #' hessian_aci(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
 #' }
 #' @export
-loglik_aci  <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
+loglik_aci  <- function(par, O, R, pen, weights_age = NULL,
+                        weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) weights_age <- matrix(1, K - 1, J - 1)
@@ -144,7 +152,8 @@ loglik_aci  <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NUL
 }
 #' @rdname loglik_aci
 #' @export
-score_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
+score_aci <- function(par, O, R, pen, weights_age = NULL,
+                      weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) weights_age <- matrix(1, K - 1, J - 1)
@@ -173,8 +182,8 @@ score_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
 }
 #' @rdname loglik_aci
 #' @export
-hessian_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL,
-                        use_band = FALSE) {
+hessian_aci <- function(par, O, R, pen, weights_age = NULL,
+                        weights_cohort = NULL, use_band = FALSE) {
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) {
@@ -251,7 +260,8 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NUL
          'D' = deriv_diag_delta)
   }
 }
-hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
+hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL,
+                                weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) weights_age <- matrix(1, K - 1, J - 1)
