@@ -1,7 +1,7 @@
-#' foo: A package for computating the notorious bar statistic.
+#' hazreg: A package for computing regularized hazard in survival analysis models
 #'
-#' The foo package provides three categories of important functions:
-#' foo, bar and baz.
+#' The foo package provides functions for the estimation of hazard
+#' of different models in time-to-event data.
 #'
 #' @section Utility functions
 #' @section The Age-cohort model
