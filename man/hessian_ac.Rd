@@ -21,6 +21,7 @@ described in TODO NAME OF REFERENCE SHEET
 Second order derivate of the negative lok-likelihood in the age-cohort model
 }
 \examples{
+\dontrun{
 J <- 10
 K <- 15
 set.seed(0)
@@ -28,6 +29,7 @@ O <- matrix(rpois(K * J, 2), K, J)
 R <- matrix(rpois(K * J, 10), K, J)
 par <- rnorm(J + K - 1)
 hessian_ac(par, O, R)
+}
 }
 \seealso{
 Other ac_likelihood: \code{\link{hessian_interaction}},

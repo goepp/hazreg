@@ -14,7 +14,8 @@ hessian_aci_no_band(par, O, R, pen, weights_age = NULL,
   weights_cohort = NULL)
 }
 \arguments{
-\item{par}{parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}}
+\item{par}{parameter of the age-cohort-interaction model in the
+form \code{c(mu, alpha and beta)}}
 
 \item{O}{Observed events as returned by \code{\link{exhaustive_stat_2d}}}
 
@@ -28,8 +29,10 @@ described in TODO NAME OF REFERENCE SHEET
 Negative lok-likelihood in the age-cohort-interaction model
 }
 \examples{
-par <- rnorm(ncol(O) + nrow(O))
+\dontrun{
+par <- rnorm(ncol(O) * nrow(O))
 loglik_aci(par, O, R) # length 1 vector
 score_aci(par, O, R) # vector of length (ncol(O) + nrow(O))
 hessian_aci(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
+}
 }

@@ -4,12 +4,15 @@
 #' @param J number of age intervals
 #' @param K number of cohort intervals
 #' @return The hazard rate in a matrix of size K * J:
-#' \deqn{\lambda_{a, c} = \exp (\mu + \alpha_{a} + \beta_{c})}
+## \deqn{\lambda_{a, c} = \exp (\mu + \alpha_{a} + \beta_{c})}
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' par <- rnorm(K + J - 1)
 #' persp(par2haz_ac(par, J, K))
+#' }
+#' @export
 par2haz_ac <- function(par, J, K) {
   if (length(par) != J + K - 1) {
     stop("Error: length of param not equal to J + K - 1")
@@ -50,6 +53,7 @@ par2haz_ac <- function(par, J, K) {
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
 #' @return The negative log-likelihood as described in TODO NAME OF REFERENCE SHEET
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' set.seed(0)
@@ -57,6 +61,8 @@ par2haz_ac <- function(par, J, K) {
 #' R <- matrix(rpois(K * J, 10), K, J)
 #' par <- rnorm(J + K - 1)
 #' loglik_ac(par, O, R)
+#' }
+#' @export
 loglik_ac <- function(par, O, R) {
   K <- nrow(O)
   J <- ncol(O)
@@ -78,6 +84,7 @@ loglik_ac <- function(par, O, R) {
 #' @return The vector of derivatives of the negative log-likelihood as
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' set.seed(0)
@@ -85,6 +92,8 @@ loglik_ac <- function(par, O, R) {
 #' R <- matrix(rpois(K * J, 10), K, J)
 #' par <- rnorm(J + K - 1)
 #' score_ac(par, O, R)
+#' }
+#' @export
 score_ac <- function(par, O, R) {
   K <- nrow(O)
   J <- ncol(O)
@@ -112,6 +121,7 @@ score_ac <- function(par, O, R) {
 #' @return The matrix of second order derivatives of the negative log-likelihood as
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' set.seed(0)
@@ -119,6 +129,8 @@ score_ac <- function(par, O, R) {
 #' R <- matrix(rpois(K * J, 10), K, J)
 #' par <- rnorm(J + K - 1)
 #' hessian_ac(par, O, R)
+#' }
+#' @export
 hessian_ac <- function(par, O, R) {
   K <- nrow(O)
   J <- ncol(O)
@@ -153,11 +165,14 @@ hessian_ac <- function(par, O, R) {
 #' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
 #' @return The maximum likelihood estimate of the Age-Cohort Model. Minimization is made
-#' using the Newton-Raphson algorithm (\url{https://en.wikipedia.org/wiki/Newton%27s_method})
+#' using the Newton-Raphson algorithm (see \url{https://en.wikipedia.org/wiki/Newton_method})
 #' @seealso \code{\link{exhaustive_stat_2d}}, \code{\link{exhaustive_stat_1d}}
 #' @examples
+#' \dontrun{
 #' par <- rnorm(ncol(O) + nrow(O))
 #' hessian_ac(par, O, R)
+#' }
+#' @export
 solver_ac <- function(O, R, maxiter = 1000, verbose = FALSE) {
   K <- nrow(O)
   J <- ncol(O)

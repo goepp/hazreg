@@ -1,3 +1,9 @@
+#' @export
+par2haz_interaction <- function(par, J, K) {
+  if (length(par) != J * K) stop("error: length of param not equal to J * K")
+  exp(matrix(par, K, J))
+}
+#' @export
 par2grid_interaction <- function(par, cuts_age, cuts_cohort) {
   J <- length(cuts_age) + 1
   K <- length(cuts_cohort) + 1
@@ -9,10 +15,7 @@ par2grid_interaction <- function(par, cuts_age, cuts_cohort) {
     mutate(cohort = factor(cohort, levels = unique(cohort)))
   par_df
 }
-par2haz_interaction <- function(par, J, K) {
-  if (length(par) != J * K) stop("error: length of param not equal to J * K")
-  exp(matrix(par, K, J))
-}
+#' @export
 par_sel2par_interaction <- function(par_sel, sel) {
   J <- ncol(sel)
   K <- nrow(sel)
@@ -23,6 +26,7 @@ par_sel2par_interaction <- function(par_sel, sel) {
   stopifnot(length(interaction) == J * K)
   interaction
 }
+#' @export
 par2haz_sel_interaction <- function(par, sel, J, K, haz.log = FALSE) {
   L <- nlevels(as.factor(sel))
   if (length(par) != L) {
@@ -38,6 +42,7 @@ par2haz_sel_interaction <- function(par, sel, J, K, haz.log = FALSE) {
     return(exp(eta))
   }
 }
+#' @export
 loglik_sel_interaction <- function(par, O, R) {
   sum(exp(par) * R - "[<-"(par * O, which(is.nan(par * O), arr.ind = TRUE), 0))
 }
@@ -49,6 +54,7 @@ loglik_sel_interaction <- function(par, O, R) {
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
 #' @return The negative log-likelihood as described in TODO NAME OF REFERENCE SHEET
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' set.seed(0)
@@ -56,6 +62,8 @@ loglik_sel_interaction <- function(par, O, R) {
 #' R <- matrix(rpois(K * J, 10), K, J)
 #' par <- rnorm(J * K)
 #' loglik_interaction(par, O, R)
+#' }
+#' @export
 loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
                                weights_cohort = NULL) {
   K <- nrow(O)
@@ -78,6 +86,7 @@ loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' @return The vector of derivatives of the negative log-likelihood as
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' set.seed(0)
@@ -85,6 +94,8 @@ loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' R <- matrix(rpois(K * J, 10), K, J)
 #' par <- rnorm(J * K)
 #' score_interaction(par, O, R)
+#' }
+#' @export
 score_interaction <- function(par, O, R, pen, weights_age = NULL,
                               weights_cohort = NULL) {
   K <- nrow(O)
@@ -109,6 +120,7 @@ score_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' @return The matrix of second order derivatives of the negative log-likelihood as
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' set.seed(0)
@@ -116,6 +128,8 @@ score_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' R <- matrix(rpois(K * J, 10), K, J)
 #' par <- rnorm(J * K)
 #' hessian_interaction(par, O, R)
+#' }
+#' @export
 hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
                                 weights_cohort = NULL, use_band = FALSE) {
   K <- nrow(O)
@@ -206,6 +220,7 @@ ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FA
 #' is recommended
 #' @return The vector estimate of the ridge regularized interaction model.
 #' @examples
+#' \dontrun{
 #' J <- 10
 #' K <- 15
 #' set.seed(0)
@@ -215,6 +230,9 @@ ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FA
 #' ridge <- ridge_solver_interaction(O, R, pen)
 #' ridge$par
 #' ridge$iter
+#' }
+#' @export
+#' @family ridge
 ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
                                       weights_cohort = NULL, use_band = TRUE,
                                       maxiter = 1000, old_par = NULL,
@@ -244,6 +262,8 @@ ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
 #' @rdname ridge_solver_interaction
+#' @export
+#' @family adaptive_ridge
 aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
                                       use_band = TRUE,
                                       maxiter = 1000 * length(pen_vect)) {

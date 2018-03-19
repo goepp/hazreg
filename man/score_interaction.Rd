@@ -21,6 +21,7 @@ described in TODO NAME OF REFERENCE SHEET
 First order derivate of the negative lok-likelihood in the interaction model
 }
 \examples{
+\dontrun{
 J <- 10
 K <- 15
 set.seed(0)
@@ -28,4 +29,5 @@ O <- matrix(rpois(K * J, 2), K, J)
 R <- matrix(rpois(K * J, 10), K, J)
 par <- rnorm(J * K)
 score_interaction(par, O, R)
+}
 }

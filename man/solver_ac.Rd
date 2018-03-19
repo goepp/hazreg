@@ -11,12 +11,18 @@ solver_ac(O, R, maxiter = 1000, verbose = FALSE)
 
 \item{R}{Time at risk as returned by \code{\link{exhaustive_stat_2d}}}
 }
+\value{
+The maximum likelihood estimate of the Age-Cohort Model. Minimization is made
+using the Newton-Raphson algorithm (see \url{https://en.wikipedia.org/wiki/Newton_method})
+}
 \description{
 Solver of the Age-cohort model
 }
 \examples{
+\dontrun{
 par <- rnorm(ncol(O) + nrow(O))
 hessian_ac(par, O, R)
+}
 }
 \seealso{
 \code{\link{exhaustive_stat_2d}}, \code{\link{exhaustive_stat_1d}}

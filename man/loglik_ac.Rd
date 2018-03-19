@@ -20,6 +20,7 @@ The negative log-likelihood as described in TODO NAME OF REFERENCE SHEET
 Negative lok-likelihood in the age-cohort model
 }
 \examples{
+\dontrun{
 J <- 10
 K <- 15
 set.seed(0)
@@ -27,6 +28,7 @@ O <- matrix(rpois(K * J, 2), K, J)
 R <- matrix(rpois(K * J, 10), K, J)
 par <- rnorm(J + K - 1)
 loglik_ac(par, O, R)
+}
 }
 \seealso{
 Other ac_likelihood: \code{\link{hessian_ac}},

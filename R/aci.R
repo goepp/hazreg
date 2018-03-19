@@ -1,3 +1,30 @@
+#' Transform parameter to hazard in the age-cohort-interaction model
+#'
+#' @param par parameter of the age-cohort-interaction model in the
+#' form \code{c(mu, alpha and beta)}
+#' @param J length of \code{cuts_age}
+#' @param K length of \code{cuts_cohort}
+#' @return a matrix of dimension \code{K * J}
+#' @examples
+#' \dontrun{
+#' J <-  10
+#' K <-  15
+#' set.seed(0)
+#' persp(par2haz_aci(rnorm(J * K), K, J))
+#' }
+#' @export
+par2haz_aci <- function(par, J, K) {
+  if (length(par) != J * K) {
+    stop("Error: length of param not equal to J * K")
+  }
+  mu <- par[1]
+  ext_alpha <- c(0, par[2:J])
+  ext_beta <- c(0, par[(J + 1):(J + K - 1)])
+  ext_delta <- "[<-"(matrix(0, K, J), -1, -1, matrix(par[-(1:(J + K - 1))], K - 1, J - 1))
+  exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta)
+}
+#' @rdname par2haz_aci
+#' @export
 par2grid_aci <- function(par, cuts_age, cuts_cohort) {
   J <- length(cuts_age) + 1
   K <- length(cuts_cohort) + 1
@@ -9,6 +36,19 @@ par2grid_aci <- function(par, cuts_age, cuts_cohort) {
     mutate(cohort = factor(cohort, levels = unique(cohort)))
   par_df
 }
+#' @rdname par2haz_aci
+#' @export
+par_sel2par_aci <- function(par_sel, sel) {
+  J <- ncol(sel) + 1
+  K <- nrow(sel) + 1
+  interaction_sel <- par_sel[-(1:(J + K - 1))]
+  interaction <- as.vector(mapvalues(sel,
+                                     from = levels(as.factor(sel)),
+                                     to = interaction_sel))
+  stopifnot(length(interaction) == (J - 1) * (K - 1))
+  c(par_sel[1:(J + K - 1)], interaction)
+}
+#' @export
 valve2sel_aci <- function(valve_age, valve_cohort, epsilon = 1e-8) {
   library(igraph)
   if (any(dim(valve_age) != dim(valve_cohort))) {
@@ -43,26 +83,7 @@ valve2sel_aci <- function(valve_age, valve_cohort, epsilon = 1e-8) {
       'rownames<-'(rownames(valve_age)) %>%
       'colnames<-'(colnames(valve_cohort)))
 }
-par2haz_aci <- function(par, J, K) {
-  if (length(par) != J * K) {
-    stop("Error: length of param not equal to J * K")
-  }
-  mu <- par[1]
-  ext_alpha <- c(0, par[2:J])
-  ext_beta <- c(0, par[(J + 1):(J + K - 1)])
-  ext_delta <- "[<-"(matrix(0, K, J), -1, -1, matrix(par[-(1:(J + K - 1))], K - 1, J - 1))
-  exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta)
-}
-par_sel2par_aci <- function(par_sel, sel) {
-  J <- ncol(sel) + 1
-  K <- nrow(sel) + 1
-  interaction_sel <- par_sel[-(1:(J + K - 1))]
-  interaction <- as.vector(mapvalues(sel,
-                                     from = levels(as.factor(sel)),
-                                     to = interaction_sel))
-  stopifnot(length(interaction) == (J - 1) * (K - 1))
-  c(par_sel[1:(J + K - 1)], interaction)
-}
+#' @export
 par2haz_sel_aci_old <- function(par, sel, J, K, haz.log = FALSE) {
   L <- nlevels(as.factor(sel))
   if (length(par) != J + K - 1 + L) {
@@ -80,6 +101,7 @@ par2haz_sel_aci_old <- function(par, sel, J, K, haz.log = FALSE) {
   if (haz.log) outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta
   else exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta)
 }
+#' @export
 loglik_sel_aci_old <- function(par, O, R, sel) {
   K <- nrow(O)
   J <- ncol(O)
@@ -88,17 +110,21 @@ loglik_sel_aci_old <- function(par, O, R, sel) {
 }
 #' Negative lok-likelihood in the age-cohort-interaction model
 #'
-#' @family aci_likelihood
-#' @param par parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}
+## @family aci_likelihood
+#' @param par parameter of the age-cohort-interaction model in the
+#' form \code{c(mu, alpha and beta)}
 #' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
 #' @return The vector of derivatives of the negative log-likelihood as
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
-#' par <- rnorm(ncol(O) + nrow(O))
+#' \dontrun{
+#' par <- rnorm(ncol(O) * nrow(O))
 #' loglik_aci(par, O, R) # length 1 vector
 #' score_aci(par, O, R) # vector of length (ncol(O) + nrow(O))
 #' hessian_aci(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
+#' }
+#' @export
 loglik_aci  <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
@@ -117,6 +143,7 @@ loglik_aci  <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NUL
   sum(exp(eta) * R - eta * O) + pen_term
 }
 #' @rdname loglik_aci
+#' @export
 score_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
@@ -145,6 +172,7 @@ score_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
   c(deriv_mu, deriv_alpha, deriv_beta, deriv_delta)
 }
 #' @rdname loglik_aci
+#' @export
 hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
@@ -278,18 +306,20 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NUL
          'D' = deriv_diag_delta)
   }
 }
-loglik_aci_sel <- function(par, O, R, sel_array) {
+loglik_aci_sel_old <- function(par, O, R, sel, L) {
   K <- nrow(O)
   J <- ncol(O)
-  if (any(dim(sel_array)[1:2] != c(K - 1, J - 1))) {
-    stop("Error : sel_array dimensions do not agree with exhaustive statistics")
+  if (length(par) != J + K - 1 + L) {
+    stop("Error: selection nlevels not consistent with J * K")
   }
-  # L <- dim(sel_array)[3]
   mu <- par[1]
   ext_alpha <- c(0, par[2:J])
   ext_beta <- c(0, par[(J + 1):(J + K - 1)])
-  delta <- sweep(sel_array, MARGIN = 3, par[-(1:(J + K - 1))], '*') %>%
-    apply(., MARGIN = c(1, 2), sum)
+  z <- par[-(1:(J + K - 1))]
+  delta <- matrix(NA, K - 1, J - 1)
+  for (level_ind in 1:L) {
+    delta[sel == level_ind] <- z[level_ind]
+  }
   ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
   eta <- outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta
   sum(exp(eta) * R - eta * O)
@@ -309,6 +339,43 @@ par2haz_aci_sel <- function(par, O, R, sel_array) {
   ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
   exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta)
 }
+#' Negative lok-likelihood in the age-cohort-interaction model with constaints
+#'
+## @family aci_sel_likelihood
+#' @param par parameter of the age-cohort-interaction model in the
+#' form \code{c(mu, alpha and beta)}
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @param sel_array an array defining the selection found by the adaptive ridge
+#' procedure. (see \code{aridge_solver_aci})
+#' @return The vector of derivatives of the negative log-likelihood as
+#' described in TODO NAME OF REFERENCE SHEET
+#' @examples
+#' \dontrun{
+#' par <- rnorm(ncol(O) * nrow(O))
+#' loglik_aci_sel(par, O, R) # length 1 vector
+#' score_aci_sel(par, O, R) # vector of length (ncol(O) + nrow(O))
+#' hessian_aci_sel(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
+#' }
+#' @export
+loglik_aci_sel <- function(par, O, R, sel_array) {
+  K <- nrow(O)
+  J <- ncol(O)
+  if (any(dim(sel_array)[1:2] != c(K - 1, J - 1))) {
+    stop("Error : sel_array dimensions do not agree with exhaustive statistics")
+  }
+  # L <- dim(sel_array)[3]
+  mu <- par[1]
+  ext_alpha <- c(0, par[2:J])
+  ext_beta <- c(0, par[(J + 1):(J + K - 1)])
+  delta <- sweep(sel_array, MARGIN = 3, par[-(1:(J + K - 1))], '*') %>%
+    apply(., MARGIN = c(1, 2), sum)
+  ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
+  eta <- outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta
+  sum(exp(eta) * R - eta * O)
+}
+#' @rdname loglik_aci_sel
+#' @export
 score_aci_sel <- function(par, O, R, sel_array) {
   K <- nrow(O)
   J <- ncol(O)
@@ -333,6 +400,8 @@ score_aci_sel <- function(par, O, R, sel_array) {
     apply(., MARGIN = 3, sum)
   c(deriv_mu, deriv_alpha, deriv_beta, deriv_delta)
 }
+#' @rdname loglik_aci_sel
+#' @export
 hessian_aci_sel <- function(par, O, R, sel_array) {
   K <- nrow(O)
   J <- ncol(O)
@@ -377,6 +446,15 @@ hessian_aci_sel <- function(par, O, R, sel_array) {
     "dimnames<-"(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", L)),
                       c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", L))))
 }
+#' Computes the estimate of the constrained aci model
+#'
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @param sel_array an array defining the selection found by the adaptive ridge
+#' procedure. (see \code{aridge_solver_aci})
+#' @return The vector estimate of the constrained age-cohort-interaction model.
+#' The \code{sel_array} is an array of dimension \code{K  J  L}
+#' @export
 ridge_solver_aci_sel <- function(O, R, sel_array, maxiter = 1000) {
   K <- nrow(O)
   J <- ncol(O)
@@ -394,7 +472,7 @@ ridge_solver_aci_sel <- function(O, R, sel_array, maxiter = 1000) {
   }
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
-ridge_solver_aci <- function(O, R, pen, use_band = FALSE, maxiter = 1000) {
+ridge_solver_aci_old <- function(O, R, pen, use_band = FALSE, maxiter = 1000) {
   old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (use_band) {
@@ -413,8 +491,37 @@ ridge_solver_aci <- function(O, R, pen, use_band = FALSE, maxiter = 1000) {
   }
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
-wridge_solver_aci <- function(O, R, pen, weights_age, weights_cohort,
-                              maxiter = 1000, old_par = NULL, use_band = FALSE) {
+#' Computes the ridge regularized estimates of the age-cohort-interaction
+#'  model
+#'
+#' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
+#' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
+#' @param pen The penalty constant.
+#' @param maxiter The maximal number of iteractions of the Newton-Raphson procedure.
+#' @param verbose Whether to display the progress of the Newton-Raphson procedure.
+#' @param use_band Whether to use faster inversion of the hessian function. \code{TRUE}
+#' @param weights_age weights of the age differences in the log-hazard. See ADD REFERENCE SHEET
+#' @param weights_cohort weights of the cohort differences in the log-hazard. See ADD REFERENCE SHEET
+#' @param old_par initial point of the iteration. The default choice is \code{0}
+#' is recommended
+#' @return The vector estimate of the ridge regularized age-cohort-interaction model.
+#' @examples
+#' \dontrun{
+#' J <- 10
+#' K <- 15
+#' set.seed(0)
+#' O <- matrix(rpois(K * J, 2), K, J)
+#' R <- matrix(rpois(K * J, 10), K, J)
+#' pen <-  50
+#' ridge <- ridge_solver_aci(O, R, pen)
+#' ridge$par
+#' ridge$iter
+#' }
+#' @export
+#' @family ridge
+ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
+                             weights_cohort = NULL, old_par = NULL,
+                             use_band = FALSE, maxiter = 1000) {
   if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (use_band) {
@@ -427,7 +534,7 @@ wridge_solver_aci <- function(O, R, pen, weights_age, weights_cohort,
         score_aci(old_par, O, R, pen, weights_age, weights_cohort))
     }
     if (sum(is.na(abs(par - old_par) / abs(old_par)))) break
-    if (max(abs(par - old_par) / abs(old_par)) <= 1e-7) break
+    if (max(abs(par - old_par) / abs(old_par)) <= 1e-8) break
     old_par <- par
   }
   if (iter == maxiter) {
@@ -435,6 +542,9 @@ wridge_solver_aci <- function(O, R, pen, weights_age, weights_cohort,
   }
   list("par" = par, "convergence" = iter != maxiter, "niter" = iter)
 }
+#' @rdname ridge_solver_aci
+#' @export
+#' @family adaptive_ridge
 aridge_solver_aci <- function(O, R, pen_vect, sample_size,
                               use_band = FALSE,
                               maxiter = 1000 * length(pen_vect)) {
@@ -458,7 +568,7 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
     cat("iter =", iter, '\n')
     old_valve_age <- valve_age
     old_valve_cohort <- valve_cohort
-    par <- wridge_solver_aci(O, R, pen = pen_vect[ind_pen],
+    par <- ridge_solver_aci(O, R, pen = pen_vect[ind_pen],
                              weights_age, weights_cohort,
                              old_par = old_par, use_band = use_band)$par
     delta <- matrix(par[-(1:(J + K - 1))], K - 1, J - 1)
@@ -513,21 +623,4 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
   return(list("par" = par_sel_ls, "haz" = haz_sel_ls, "sel" = sel_ls,
               "bic" = bic, "aic" = aic, 'ebic' = ebic))
 }
-loglik_aci_sel_old <- function(par, O, R, sel, L) {
-  K <- nrow(O)
-  J <- ncol(O)
-  if (length(par) != J + K - 1 + L) {
-    stop("Error: selection nlevels not consistent with J * K")
-  }
-  mu <- par[1]
-  ext_alpha <- c(0, par[2:J])
-  ext_beta <- c(0, par[(J + 1):(J + K - 1)])
-  z <- par[-(1:(J + K - 1))]
-  delta <- matrix(NA, K - 1, J - 1)
-  for (level_ind in 1:L) {
-    delta[sel == level_ind] <- z[level_ind]
-  }
-  ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
-  eta <- outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta
-  sum(exp(eta) * R - eta * O)
-}
+

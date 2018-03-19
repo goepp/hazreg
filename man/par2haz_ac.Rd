@@ -15,14 +15,15 @@ par2haz_ac(par, J, K)
 }
 \value{
 The hazard rate in a matrix of size K * J:
-\deqn{\lambda_{a, c} = \exp (\mu + \alpha_{a} + \beta_{c})}
 }
 \description{
 Create hazard from parameters of the Age-Cohort Model
 }
 \examples{
+\dontrun{
 J <- 10
 K <- 15
 par <- rnorm(K + J - 1)
 persp(par2haz_ac(par, J, K))
+}
 }
