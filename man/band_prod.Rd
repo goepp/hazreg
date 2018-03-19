@@ -24,6 +24,7 @@ If these two conditions are met, the returned value is the same as
 Solve linear system when the matrix is block-wise with a band diagonal block
 }
 \examples{
+\dontrun{
 ## With mat_as_rotated = FALSE
 set.seed(0)
 A <- matrix(rnorm(36), 6, 6)
@@ -47,4 +48,5 @@ mat <- rbind(cbind(mat_rotated$A, mat_rotated$B),
                      cbind(t(mat_rotated$B), rot2mat(mat_rotated$D)))
 vect <- rnorm(10)
 max(band_prod(mat_rotated, vect, mat_as_rotated = TRUE) - solve(mat, vect))
+}
 }

@@ -28,6 +28,7 @@ interaction term.
 Create two dimensional hazard rate from Age-Cohort-Interaction model
 }
 \examples{
+\dontrun{
 library(lattice)
 mu <- log(1e-2)
 age_seq <- seq(0, 100, length.out = 100)
@@ -37,4 +38,5 @@ cohort_coef <- seq(0, 0.8, length.out = age_length - 1)
 islet_ls = list(list(mean = c(1945, 45), sigma = 100 * diag(2), coef = 40))
 hazard <- map_maker(mu, age_coef, cohort_coef, age_seq, cohort_seq, islet_ls = islet_ls)
 persp(hazard$sheet)
+}
 }

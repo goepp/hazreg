@@ -21,5 +21,7 @@ distribution given by \code{cuts} and \code{alpha}
 Generate data from piecewise constant hazard
 }
 \examples{
+\dontrun{
 map_maker(100, c(20, 40, 60), c(0.01, 0.03, 0.05, 0.08))
+}
 }

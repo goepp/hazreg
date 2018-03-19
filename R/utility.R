@@ -20,6 +20,7 @@ NULL
 #' @examples
 #' seq_geom(1, 10, 10)
 #' seq_geom(1, 10, 10)
+#' @export
 seq_geom <- function(a, b, length.out) {
   return(a * (b / a) ^ ((0:(length.out - 1))/(length.out - 1)))
 }
@@ -43,6 +44,7 @@ reverselog_trans <- function(base = exp(1)) {
 #' \code{islet_ls} gives the mean, variance-covariance matrix and multiplicative coefficients of each
 #' interaction term.
 #' @examples
+#' \dontrun{
 #' library(lattice)
 #' mu <- log(1e-2)
 #' age_seq <- seq(0, 100, length.out = 100)
@@ -52,6 +54,8 @@ reverselog_trans <- function(base = exp(1)) {
 #' islet_ls = list(list(mean = c(1945, 45), sigma = 100 * diag(2), coef = 40))
 #' hazard <- map_maker(mu, age_coef, cohort_coef, age_seq, cohort_seq, islet_ls = islet_ls)
 #' persp(hazard$sheet)
+#' }
+#' @export
 map_maker <- function(mu, age_coef, cohort_coef, age_seq, cohort_seq, islet_ls = NULL) {
   library(pryr)
   library(mvtnorm)
@@ -79,7 +83,10 @@ map_maker <- function(mu, age_coef, cohort_coef, age_seq, cohort_seq, islet_ls =
 #' @return A sequence of observations of length \code{n} generated from the
 #' distribution given by \code{cuts} and \code{alpha}
 #' @examples
+#' \dontrun{
 #' map_maker(100, c(20, 40, 60), c(0.01, 0.03, 0.05, 0.08))
+#' }
+#' @export
 rsurv <- function(n, cuts, alpha) {
   u <- runif(n)
   k <- length(alpha)
@@ -108,6 +115,7 @@ rsurv <- function(n, cuts, alpha) {
 #' @param dob_dist_par Parameter of the distribution of the cohort
 #' @return \code{surv_data}, a data frame of observations with age and cohort.
 #' @examples
+#' \dontrun{
 #' library(tidyverse)
 #' mu <- log(1e-2)
 #' age_seq <- seq(0, 100, length.out = 100)
@@ -117,6 +125,8 @@ rsurv <- function(n, cuts, alpha) {
 #' islet_ls = list(list(mean = c(1945, 45), sigma = 100 * diag(2), coef = 40))
 #' hazard <- map_maker(mu, age_coef, cohort_coef, age_seq, cohort_seq, islet_ls = islet_ls)
 #' (map_surv(hazard, 10))
+#' }
+#' @export
 map_surv <- function(map, sample_size, dob_dist, dob_dist_par = NULL) {
   require(pryr)
   if (is.character(dob_dist)) {
@@ -176,6 +186,7 @@ exhaustive_stat_sel <- function(exhaust, sel) {
 #' If these two conditions are met, the returned value is the same as
 #' \code{solve(mat, vect)}. There might be nummerical impercision errors.
 #' @examples
+#' \dontrun{
 #' ## With mat_as_rotated = FALSE
 #' set.seed(0)
 #' A <- matrix(rnorm(36), 6, 6)
@@ -199,6 +210,8 @@ exhaustive_stat_sel <- function(exhaust, sel) {
 #'                      cbind(t(mat_rotated$B), rot2mat(mat_rotated$D)))
 #' vect <- rnorm(10)
 #' max(band_prod(mat_rotated, vect, mat_as_rotated = TRUE) - solve(mat, vect))
+#' }
+#' @export
 band_prod <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
   if (mat_as_rotated) {
     if (nrow(mat$A) != ncol(mat$A)) {
@@ -238,6 +251,7 @@ band_prod <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
                 bandsolve(rotD, t(B) %*% temp2))
   )
 }
+#' @export
 valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
   if (any(dim(valve_age) + c(0, 1) != dim(valve_cohort) + c(1, 0))) {
     stop("Error: dimensions of valve matrices must agree")
@@ -267,10 +281,12 @@ valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
       'rownames<-'(rownames(valve_age)) %>%
       'colnames<-'(colnames(valve_cohort)))
 }
+#' @export
 grid2raster <- function(grid_df, title = NULL) {
   ggplot(grid_df, aes(cohort, age, fill = value)) + geom_raster() +
     ggtitle(title) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
+#' @export
 sel2segment <- function(sel, cuts_age, cuts_cohort) {
   if (sel %>% as.factor() %>% nlevels() == 1) {
     return(tibble())
@@ -327,6 +343,7 @@ sel2segment <- function(sel, cuts_age, cuts_cohort) {
 #'                         mutate(delta = as.numeric(censoring >= age)) %>%
 #'                           mutate(age = pmin(age, censoring))
 #' surv_data
+#' @export
 exhaustive_stat_1d <- function(surv_data, cuts_age) {
   ext_cuts_age <- c(0, cuts_age)
   temp1 <- model.matrix(~0 + cut(surv_data$age,
@@ -367,6 +384,7 @@ exhaustive_stat_1d <- function(surv_data, cuts_age) {
 #'                         mutate(delta = as.numeric(censoring >= age)) %>%
 #'                           mutate(age = pmin(age, censoring))
 #' surv_data
+#' @export
 exhaustive_stat_2d <- function(surv_data, cuts_age, cuts_cohort) {
   surv_data <- surv_data %>%
     mutate(cohort_lvl = cut(surv_data$cohort,
@@ -380,6 +398,7 @@ exhaustive_stat_2d <- function(surv_data, cuts_age, cuts_cohort) {
   R <- lapply(res, function(x) x$R) %>% do.call(rbind, .) # retrive R and merge it into one matrix
   list(O = O, R = R)
 }
+#' @export
 solver_mle_sel <- function(O, R, sel) {
   L <- nlevels(as.factor(sel))
   K <- nrow(O)
@@ -390,6 +409,7 @@ solver_mle_sel <- function(O, R, sel) {
   haz_res <- par2haz_sel(par_res, sel, J, K, haz.log = FALSE)
   list("par" = par_res, "haz" = haz_res)
 }
+#' @export
 cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   score_mat <- matrix(NA, nfold, length(pen_vect))
   for (ind in 1:nfold) {
@@ -411,6 +431,7 @@ cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   }
   colSums(score_mat)
 }
+#' @export
 cv_ridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   score_mat <- matrix(NA, nfold, length(pen_vect))
   for (ind in 1:nfold) {
@@ -429,6 +450,7 @@ cv_ridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   }
   colSums(score_mat)
 }
+#' @export
 par2haz_sel <- function(par, sel, J, K, haz.log = FALSE) {
   L <- nlevels(as.factor(sel))
   if (length(par) != J + K - 1 + L) {
@@ -456,6 +478,7 @@ mle_sel_old <- function(O, R, sel) {
   haz_res <- par2haz_sel(par_res, sel, J, K, haz.log = FALSE)
   list("par" = par_res, "haz" = haz_res)
 }
+#' @export
 aci_cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   score_mat <- matrix(NA, nfold, length(pen_vect))
   for (ind in 1:nfold) {
@@ -477,6 +500,7 @@ aci_cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   }
   colSums(score_mat)
 }
+#' @export
 aci_cv_ridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   score_mat <- matrix(NA, nfold, length(pen_vect))
   for (ind in 1:nfold) {
@@ -495,6 +519,7 @@ aci_cv_ridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   }
   colSums(score_mat)
 }
+#' @export
 check_derivate_score <- function(par, func, deriv, ...) {
   epsilon_vect <- 10 ^ -seq(1, 6, by = 1)
   p <- length(par)
@@ -527,6 +552,7 @@ check_derivate_score <- function(par, func, deriv, ...) {
     mutate(epsilon = as.numeric(levels(epsilon)))
   list('vect' = score_df, 'mse' = mse_df)
 }
+#' @export
 check_derivate_hessian <- function(par, func, deriv, ...) {
   epsilon_vect <- 10 ^ -seq(1, 6, by = 1)
   p <- length(par)

@@ -173,61 +173,6 @@ score_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
 }
 #' @rdname loglik_aci
 #' @export
-hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
-  K <- nrow(O)
-  J <- ncol(O)
-  if (is.null(weights_age)) weights_age <- matrix(1, K - 1, J - 1)
-  if (is.null(weights_cohort)) weights_cohort <- matrix(1, K - 1, J - 1)
-  mu <- par[1]
-  alpha <- par[2:J]
-  ext_alpha <- c(0, alpha)
-  beta <- par[(J + 1):(J + K - 1)]
-  ext_beta <- c(0, beta)
-  delta <- matrix(par[-(1:(J + K - 1))], K - 1, J - 1)
-  ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
-  deriv_diag_mu <- sum(exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)
-  deriv_diag_alpha <- diag(sapply(2:J, function(ind_j) sum( exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+")
-                                                                + ext_delta[, ind_j]) * R[, ind_j])), J - 1, J - 1)
-  deriv_diag_beta <- diag(sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
-                                                               + ext_delta[ind_k, ]) * R[ind_k, ])), K - 1, K - 1)
-  deriv_alpha_mu <- matrix(sapply(2:J, function(ind_j) sum( exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+")
-                                                                + ext_delta[, ind_j]) * R[, ind_j])), J - 1, 1)
-  deriv_beta_mu <- matrix(sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
-                                                               + ext_delta[ind_k,]) * R[ind_k,])), K - 1, 1)
-  deriv_delta_mu <- matrix(as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]), (J - 1) * (K - 1), 1)
-  deriv_beta_alpha <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]
-  deriv_delta_alpha <- "[<-"(matrix(0, (J - 1) * (K - 1), J - 1),
-                             cbind(1:((K - 1) * (J - 1)), rep(1:(J - 1), each = K - 1)),
-                             as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]))
-  deriv_delta_beta <- "[<-"(matrix(0, (J - 1) * (K - 1), K - 1),
-                            cbind(seq(1, (J - 1) * (K - 1)), rep(1:(K - 1), J - 1)),
-                            as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]))
-  index_weights_age <- cbind(
-    1:((K - 1) * (J - 2)) + K - 1,
-    1:((K - 1) * (J - 2))
-  )
-  index_weights_cohort <- cbind(
-    (1:((J - 1) * (K - 1)))[-seq(1, (K - 1) * (J - 1), by = (K - 1))],
-    (1:((J - 1) * (K - 1)))[-(K - 1)  * seq(1, J - 1)]
-  )
-  deriv_pen_diag <- diag(as.vector(
-    weights_age + "["(cbind(weights_age, 0), 1:(K - 1), -1) +
-      weights_cohort + weights_cohort %>% rbind(0) %>% "["(-1, 1:(J - 1))
-  ))
-  deriv_pen_weights <- "[<-"("[<-"(matrix(0, (K - 1) * (J - 1), (K - 1) * (J - 1)),
-                                   index_weights_age, -as.vector(weights_age[, -1])),
-                             index_weights_cohort, -as.vector(weights_cohort[-1, ]))
-  deriv_diag_delta <- diag(
-    as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]),
-    (J - 1) * (K - 1), (J - 1) * (K - 1)) + pen * (deriv_pen_weights + t(deriv_pen_weights) + deriv_pen_diag)
-
-  cbind(rbind(deriv_diag_mu, deriv_alpha_mu, deriv_beta_mu, deriv_delta_mu),
-        rbind(t(deriv_alpha_mu), deriv_diag_alpha, deriv_beta_alpha, deriv_delta_alpha),
-        rbind(t(deriv_beta_mu), t(deriv_beta_alpha), deriv_diag_beta, deriv_delta_beta),
-        rbind(t(deriv_delta_mu), t(deriv_delta_alpha), t(deriv_delta_beta), deriv_diag_delta)) %>%
-    "dimnames<-"(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1))),
-                      c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1)))))
-}
 hessian_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL,
                         use_band = FALSE) {
   K <- nrow(O)
@@ -305,6 +250,61 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NUL
          'B' = t(cbind(deriv_delta_mu, deriv_delta_alpha, deriv_delta_beta)),
          'D' = deriv_diag_delta)
   }
+}
+hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
+  K <- nrow(O)
+  J <- ncol(O)
+  if (is.null(weights_age)) weights_age <- matrix(1, K - 1, J - 1)
+  if (is.null(weights_cohort)) weights_cohort <- matrix(1, K - 1, J - 1)
+  mu <- par[1]
+  alpha <- par[2:J]
+  ext_alpha <- c(0, alpha)
+  beta <- par[(J + 1):(J + K - 1)]
+  ext_beta <- c(0, beta)
+  delta <- matrix(par[-(1:(J + K - 1))], K - 1, J - 1)
+  ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
+  deriv_diag_mu <- sum(exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)
+  deriv_diag_alpha <- diag(sapply(2:J, function(ind_j) sum( exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+")
+                                                                + ext_delta[, ind_j]) * R[, ind_j])), J - 1, J - 1)
+  deriv_diag_beta <- diag(sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
+                                                               + ext_delta[ind_k, ]) * R[ind_k, ])), K - 1, K - 1)
+  deriv_alpha_mu <- matrix(sapply(2:J, function(ind_j) sum( exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+")
+                                                                + ext_delta[, ind_j]) * R[, ind_j])), J - 1, 1)
+  deriv_beta_mu <- matrix(sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
+                                                               + ext_delta[ind_k,]) * R[ind_k,])), K - 1, 1)
+  deriv_delta_mu <- matrix(as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]), (J - 1) * (K - 1), 1)
+  deriv_beta_alpha <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]
+  deriv_delta_alpha <- "[<-"(matrix(0, (J - 1) * (K - 1), J - 1),
+                             cbind(1:((K - 1) * (J - 1)), rep(1:(J - 1), each = K - 1)),
+                             as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]))
+  deriv_delta_beta <- "[<-"(matrix(0, (J - 1) * (K - 1), K - 1),
+                            cbind(seq(1, (J - 1) * (K - 1)), rep(1:(K - 1), J - 1)),
+                            as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]))
+  index_weights_age <- cbind(
+    1:((K - 1) * (J - 2)) + K - 1,
+    1:((K - 1) * (J - 2))
+  )
+  index_weights_cohort <- cbind(
+    (1:((J - 1) * (K - 1)))[-seq(1, (K - 1) * (J - 1), by = (K - 1))],
+    (1:((J - 1) * (K - 1)))[-(K - 1)  * seq(1, J - 1)]
+  )
+  deriv_pen_diag <- diag(as.vector(
+    weights_age + "["(cbind(weights_age, 0), 1:(K - 1), -1) +
+      weights_cohort + weights_cohort %>% rbind(0) %>% "["(-1, 1:(J - 1))
+  ))
+  deriv_pen_weights <- "[<-"("[<-"(matrix(0, (K - 1) * (J - 1), (K - 1) * (J - 1)),
+                                   index_weights_age, -as.vector(weights_age[, -1])),
+                             index_weights_cohort, -as.vector(weights_cohort[-1, ]))
+  deriv_diag_delta <- diag(
+    as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]),
+    (J - 1) * (K - 1), (J - 1) * (K - 1)) + pen * (deriv_pen_weights + t(deriv_pen_weights) + deriv_pen_diag)
+
+  cbind(rbind(deriv_diag_mu, deriv_alpha_mu, deriv_beta_mu, deriv_delta_mu),
+        rbind(t(deriv_alpha_mu), deriv_diag_alpha, deriv_beta_alpha, deriv_delta_alpha),
+        rbind(t(deriv_beta_mu), t(deriv_beta_alpha), deriv_diag_beta, deriv_delta_beta),
+        rbind(t(deriv_delta_mu), t(deriv_delta_alpha), t(deriv_delta_beta), deriv_diag_delta)) %>%
+    "dimnames<-"(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1))),
+                      c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1)))))
 }
 loglik_aci_sel_old <- function(par, O, R, sel, L) {
   K <- nrow(O)

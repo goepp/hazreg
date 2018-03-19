@@ -3,15 +3,15 @@
 \name{loglik_aci}
 \alias{loglik_aci}
 \alias{score_aci}
-\alias{hessian_aci_no_band}
+\alias{hessian_aci}
 \title{Negative lok-likelihood in the age-cohort-interaction model}
 \usage{
 loglik_aci(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
 
 score_aci(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
 
-hessian_aci_no_band(par, O, R, pen, weights_age = NULL,
-  weights_cohort = NULL)
+hessian_aci(par, O, R, pen, weights_age = NULL, weights_cohort = NULL,
+  use_band = FALSE)
 }
 \arguments{
 \item{par}{parameter of the age-cohort-interaction model in the
