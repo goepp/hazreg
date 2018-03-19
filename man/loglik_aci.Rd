@@ -2,9 +2,16 @@
 % Please edit documentation in R/aci.R
 \name{loglik_aci}
 \alias{loglik_aci}
+\alias{score_aci}
+\alias{hessian_aci_no_band}
 \title{Negative lok-likelihood in the age-cohort-interaction model}
 \usage{
 loglik_aci(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
+
+score_aci(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
+
+hessian_aci_no_band(par, O, R, pen, weights_age = NULL,
+  weights_cohort = NULL)
 }
 \arguments{
 \item{par}{parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}}
@@ -22,7 +29,7 @@ Negative lok-likelihood in the age-cohort-interaction model
 }
 \examples{
 par <- rnorm(ncol(O) + nrow(O))
-loglik_ac(par, O, R) # length 1 vector
-score_ac(par, O, R) # vector of length (ncol(O) + nrow(O))
-hessian_ac(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
+loglik_aci(par, O, R) # length 1 vector
+score_aci(par, O, R) # vector of length (ncol(O) + nrow(O))
+hessian_aci(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
 }

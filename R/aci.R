@@ -88,6 +88,7 @@ loglik_sel_aci_old <- function(par, O, R, sel) {
 }
 #' Negative lok-likelihood in the age-cohort-interaction model
 #'
+#' @family aci_likelihood
 #' @param par parameters of the age-cohort model in the form \code{c(mu, alpha and beta)}
 #' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
@@ -95,9 +96,9 @@ loglik_sel_aci_old <- function(par, O, R, sel) {
 #' described in TODO NAME OF REFERENCE SHEET
 #' @examples
 #' par <- rnorm(ncol(O) + nrow(O))
-#' loglik_ac(par, O, R) # length 1 vector
-#' score_ac(par, O, R) # vector of length (ncol(O) + nrow(O))
-#' hessian_ac(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
+#' loglik_aci(par, O, R) # length 1 vector
+#' score_aci(par, O, R) # vector of length (ncol(O) + nrow(O))
+#' hessian_aci(par, O, R) # square matrix of dimension (ncol(O) + nrow(O))
 loglik_aci  <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
@@ -115,6 +116,7 @@ loglik_aci  <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NUL
   )
   sum(exp(eta) * R - eta * O) + pen_term
 }
+#' @rdname loglik_aci
 score_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)
@@ -142,6 +144,7 @@ score_aci <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
   deriv_delta <- as.vector(deriv_delta_mat + pen_term)
   c(deriv_mu, deriv_alpha, deriv_beta, deriv_delta)
 }
+#' @rdname loglik_aci
 hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL, weights_cohort = NULL) {
   K <- nrow(O)
   J <- ncol(O)

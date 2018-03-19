@@ -72,7 +72,7 @@ loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' First order derivate of the negative lok-likelihood in the interaction model
 #'
 #' @family likelihood_likelihood
-#' @param par parameters of the interaction model in the form \code{c(mu, alpha and beta)}
+#' @param par parameters of the interaction model in the form \code{as.vector(eta)}
 #' @param O Observed events as returned by \code{\link{exhaustive_stat_2d}}
 #' @param R Time at risk as returned by \code{\link{exhaustive_stat_2d}}
 #' @return The vector of derivatives of the negative log-likelihood as

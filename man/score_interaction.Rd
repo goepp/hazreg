@@ -7,7 +7,7 @@
 score_interaction(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
 }
 \arguments{
-\item{par}{parameters of the interaction model in the form \code{c(mu, alpha and beta)}}
+\item{par}{parameters of the interaction model in the form \code{as.vector(eta)}}
 
 \item{O}{Observed events as returned by \code{\link{exhaustive_stat_2d}}}
 
