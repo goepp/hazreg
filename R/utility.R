@@ -234,7 +234,7 @@ band_prod <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
       stop('Error: lim must be specified when mat_as_rotated is FALSE')
     }
     if (!isSymmetric(mat) || ncol(mat) != length(as.vector(vect))) {
-      error("error: dimensions of hessian and score do not match")
+      error("Error: dimensions of hessian and score do not match")
     }
     S1 <- vect[1:lim]
     S2 <- vect[(lim + 1):(ncol(mat))]
