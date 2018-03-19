@@ -44,6 +44,7 @@ par2haz_sel_interaction <- function(par, sel, J, K, haz.log = FALSE) {
 }
 #' @export
 loglik_sel_interaction <- function(par, O, R) {
+  if (any(O < 0 & R < 0)) stop('Error: O and R must have non-negative values')
   sum(exp(par) * R - "[<-"(par * O, which(is.nan(par * O), arr.ind = TRUE), 0))
 }
 #' Negative lok-likelihood in the interaction model
@@ -66,6 +67,8 @@ loglik_sel_interaction <- function(par, O, R) {
 #' @export
 loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
                                weights_cohort = NULL) {
+  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) weights_age <- matrix(1, K , J - 1)
