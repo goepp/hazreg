@@ -334,6 +334,7 @@ loglik_aci_sel_old <- function(par, O, R, sel, L) {
   eta <- outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta
   sum(exp(eta) * R - eta * O)
 }
+#' @export
 par2haz_aci_sel <- function(par, O, R, sel_array) {
   K <- nrow(O)
   J <- ncol(O)
