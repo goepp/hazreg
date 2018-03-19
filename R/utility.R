@@ -217,9 +217,10 @@ band_prod <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
     if (nrow(mat$A) != ncol(mat$A)) {
       stop("Error: upper-left matrix not square")
     }
-    if (max(mat$A - t(mat$A)) >= 1e-10) {
-      stop("Error: upper-left matrix not symmetric")
-    }
+    # This code is sensible to extreme values of mat$A
+    # if (max(mat$A - t(mat$A)) >= 1e-10) {
+    #   stop("Error: upper-left matrix not symmetric")
+    # }
     if ((nrow(mat$A) + nrow(mat$D)) != length(vect)) {
       stop('Error: dimensions of matrix and vector must agree')
     }
