@@ -4,10 +4,10 @@
 \name{hazreg}
 \alias{hazreg}
 \alias{hazreg-package}
-\title{foo: A package for computating the notorious bar statistic.}
+\title{hazreg: A package for computing regularized hazard in survival analysis models}
 \description{
-The foo package provides three categories of important functions:
-foo, bar and baz.
+The foo package provides functions for the estimation of hazard
+of different models in time-to-event data.
 }
 \section{Utility functions}{
 NA
