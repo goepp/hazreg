@@ -546,8 +546,8 @@ ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
         hessian_aci(old_par, O, R, pen, weights_age, weights_cohort),
         score_aci(old_par, O, R, pen, weights_age, weights_cohort))
     }
-    if (sum(is.na(abs(par - old_par)))) break
-    if (max(abs(par - old_par) / abs(old_par)) <= 1e-8) break
+    if (sum(is.na(abs(par - old_par) / abs(old_par)))) break
+    if (max(abs(par - old_par)) <= 1e-7) break
     old_par <- par
   }
   if (iter == maxiter) {
