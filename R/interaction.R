@@ -150,7 +150,7 @@ hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
     stop('Error: dimensions of weights and exhaustive statistics must agree')
   }
   eta <- matrix(par, K, J)
-  if (!band) {
+  if (!use_band) {
     unpenalized_hessian <- diag(as.vector(exp(eta) * R))
     pen_term_diag <- diag(as.vector(
       cbind(0, weights_age) + cbind(weights_age, 0) +
