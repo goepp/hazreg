@@ -14,7 +14,7 @@ mat <- rbind(cbind(mat_rotated$A, mat_rotated$B),
 vect <- rnorm(10)
 lim <- 6
 test_that("band_prod is equivalent to solve", {
-  expect_equal(band_prod(mat, vect, lim = lim), solve(mat, vect))
+  expect_equal(band_prod(mat, vect, FALSE, lim = lim), solve(mat, vect))
   expect_equal(band_prod(mat_rotated, vect, mat_as_rotated = TRUE), solve(mat, vect))
 })
 
