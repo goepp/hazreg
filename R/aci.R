@@ -134,6 +134,8 @@ loglik_sel_aci_old <- function(par, O, R, sel) {
 #' @export
 loglik_aci  <- function(par, O, R, pen, weights_age = NULL,
                         weights_cohort = NULL) {
+  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) weights_age <- matrix(1, K - 1, J - 1)
@@ -145,8 +147,8 @@ loglik_aci  <- function(par, O, R, pen, weights_age = NULL,
   ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
   eta <- outer(beta, mu + alpha, FUN = "+") + ext_delta
   pen_term <- pen / 2 * (
-    sum(weights_age * t(apply(ext_delta[-1, ], 1, diff)) ^ 2) +
-      sum(weights_cohort * apply(ext_delta[, -1], 2, diff) ^ 2)
+    sum(weights_age * t(apply(ext_delta[-1, , drop = FALSE], 1, diff)) ^ 2) +
+      sum(weights_cohort * apply(ext_delta[, -1, drop = FALSE], 2, diff) ^ 2)
   )
   sum(exp(eta) * R - eta * O) + pen_term
 }
@@ -154,6 +156,8 @@ loglik_aci  <- function(par, O, R, pen, weights_age = NULL,
 #' @export
 score_aci <- function(par, O, R, pen, weights_age = NULL,
                       weights_cohort = NULL) {
+  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) weights_age <- matrix(1, K - 1, J - 1)
@@ -171,10 +175,10 @@ score_aci <- function(par, O, R, pen, weights_age = NULL,
   deriv_beta <- sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
                                                      + ext_delta[ind_k, ]) * R[ind_k, ] - O[ind_k, ]))
   pen_term <- pen *  (
-    weights_age * t(apply(ext_delta[-1, ], 1, diff)) -
-      (weights_age * t(apply(ext_delta[-1, ], 1, diff))) %>% cbind(0) %>% "["(1:(K - 1), -1) +
-      weights_cohort * apply(ext_delta[, -1], 2, diff) -
-      (weights_cohort * apply(ext_delta[, -1], 2, diff)) %>% rbind(0) %>% "["(-1, 1:(J - 1))
+    weights_age * t(apply(ext_delta[-1, , drop = FALSE], 1, diff)) -
+      (weights_age * t(apply(ext_delta[-1, , drop = FALSE], 1, diff))) %>% cbind(0) %>% "["(1:(K - 1), -1) +
+      weights_cohort * apply(ext_delta[, -1, drop = FALSE], 2, diff) -
+      (weights_cohort * apply(ext_delta[, -1, drop = FALSE], 2, diff)) %>% rbind(0) %>% "["(-1, 1:(J - 1))
   )
   deriv_delta_mat <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R - O)[-1, -1]
   deriv_delta <- as.vector(deriv_delta_mat + pen_term)
@@ -184,6 +188,8 @@ score_aci <- function(par, O, R, pen, weights_age = NULL,
 #' @export
 hessian_aci <- function(par, O, R, pen, weights_age = NULL,
                         weights_cohort = NULL, use_band = FALSE) {
+  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
   if (is.null(weights_age)) {
@@ -200,14 +206,18 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
   delta <- matrix(par[-(1:(J + K - 1))], K - 1, J - 1)
   ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
   deriv_diag_mu <- sum(exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)
-  deriv_diag_alpha <- diag(sapply(2:J, function(ind_j) sum( exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+")
-                                                                + ext_delta[, ind_j]) * R[, ind_j])), J - 1, J - 1)
-  deriv_diag_beta <- diag(sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
-                                                               + ext_delta[ind_k, ]) * R[ind_k, ])), K - 1, K - 1)
-  deriv_alpha_mu <- matrix(sapply(2:J, function(ind_j) sum( exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+")
-                                                                + ext_delta[, ind_j]) * R[, ind_j])), J - 1, 1)
-  deriv_beta_mu <- matrix(sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
-                                                               + ext_delta[ind_k,]) * R[ind_k,])), K - 1, 1)
+  deriv_diag_alpha <- diag(sapply(2:J,
+    function(ind_j) sum(exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+") +
+                               ext_delta[, ind_j, drop = FALSE]) * R[, ind_j])), J - 1, J - 1)
+  deriv_diag_beta <- diag(sapply(2:K,
+    function(ind_k) sum(exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+") +
+                              ext_delta[ind_k, ]) * R[ind_k, ])), K - 1, K - 1)
+  deriv_alpha_mu <- matrix(sapply(2:J,
+    function(ind_j) sum(exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+") +
+                              ext_delta[, ind_j]) * R[, ind_j])), J - 1, 1)
+  deriv_beta_mu <- matrix(sapply(2:K,
+    function(ind_k) sum(exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+") +
+                              ext_delta[ind_k,]) * R[ind_k,])), K - 1, 1)
   deriv_delta_mu <- matrix(as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]), (J - 1) * (K - 1), 1)
   deriv_beta_alpha <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]
   deriv_delta_alpha <- "[<-"(matrix(0, (J - 1) * (K - 1), J - 1),
@@ -371,6 +381,8 @@ par2haz_aci_sel <- function(par, O, R, sel_array) {
 #' }
 #' @export
 loglik_aci_sel <- function(par, O, R, sel_array) {
+  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
   if (any(dim(sel_array)[1:2] != c(K - 1, J - 1))) {
