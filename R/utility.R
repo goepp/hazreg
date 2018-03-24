@@ -146,25 +146,27 @@ map_surv <- function(map, sample_size, dob_dist, dob_dist_par = NULL) {
   age_sample <- unsplit(age_splitting, cut(cohort_sample, map$cohort, dig.lab = 4, right = FALSE))
   data.frame("age" = age_sample, "cohort" = cohort_sample)
 }
-exhaustive_stat <- function(surv.data, cuts_age, cuts_cohort) {
+exhaustive_stat <- function(surv_data, cuts_age, cuts_cohort) {
   ext_cuts_age <- c(0, cuts_age)
-  ext_cuts_cohort <- c(min(surv.data$cohort), cuts_cohort)
-  temp1 <- model.matrix(~0 + cut(surv.data$age, breaks = c(ext_cuts_age, Inf)))
+  ext_cuts_cohort <- c(min(surv_data$cohort), cuts_cohort)
+  temp1 <- model.matrix(~0 + cut(surv_data$age, breaks = c(ext_cuts_age, Inf)))
   temp2 <- t(1 - apply(temp1, 1, cummax)) + temp1
   temp3 <- t(apply(apply(
-    cbind(t(matrix(rep(ext_cuts_age, length(surv.data$age)), ncol = length(surv.data$age))),
-          surv.data$age), 1, sort),
+    cbind(t(matrix(rep(ext_cuts_age, length(surv_data$age)), ncol = length(surv_data$age))),
+          surv_data$age), 1, sort),
     2, diff))
   R_old <- as.data.frame(unname(temp2 * temp3))
   rearrange_by_cohort <- function(vect) split(vect, cut(
-    surv.data$cohort, breaks = c(ext_cuts_cohort, Inf),right = FALSE, dig.lab = 4))
+    surv_data$cohort, breaks = c(ext_cuts_cohort, Inf),right = FALSE, dig.lab = 4))
   sum_by_cohort <- function(vect) unlist(sapply(rearrange_by_cohort(vect), sum))
   R <- sapply(R_old, sum_by_cohort)
-  O_old <- as.data.frame(unname(temp1 * matrix(rep(surv.data$delta, length(ext_cuts_age)), ncol = length(ext_cuts_age))))
+  O_old <- as.data.frame(unname(temp1 * matrix(rep(surv_data$delta,
+                                                   length(ext_cuts_age)), ncol = length(ext_cuts_age))))
   O <- sapply(O_old, sum_by_cohort)
   colnames(O) <- colnames(R) <- levels(cut(0, breaks = c(ext_cuts_age, Inf), right = FALSE, dig.lab = 3))
   list("O" = O, "R" = R)
 }
+#' @export
 exhaustive_stat_sel <- function(exhaust, sel) {
   if (any(dim(exhaust$O) != dim(sel))) stop("error: dimensions of exhaust and selection must agree")
   O <- lapply(levels(as.factor(sel)),
