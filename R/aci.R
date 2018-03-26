@@ -399,13 +399,14 @@ par2haz_aci_sel <- function(par, O, R, sel_array) {
 #' }
 #' @export
 loglik_aci_sel <- function(par, O, R, sel_array) {
-  if (any(dim(O) != dim(R)) | (length(par) != length(R))) stop('Error: dimensions of O, R, and par must agree')
+  if (any(dim(O) != dim(R))) stop('Error: dimensions of O, R, and par must agree')
   if (O < 0 || R < 0) stop('Error: O and R must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
   if (any(dim(sel_array)[1:2] != c(K - 1, J - 1))) {
     stop("Error : sel_array dimensions do not agree with exhaustive statistics")
   }
+  if (length(par) != dim(sel_array)[3]) stop("Error: dimensions of par and sel_array must agree")
   # L <- dim(sel_array)[3]
   mu <- par[1]
   ext_alpha <- c(0, par[2:J])
