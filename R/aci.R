@@ -223,14 +223,17 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
   deriv_beta_mu <- matrix(sapply(2:K,
                                  function(ind_k) sum(exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+") +
                                                            ext_delta[ind_k,]) * R[ind_k,])), K - 1, 1)
-  deriv_delta_mu <- matrix(as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]), (J - 1) * (K - 1), 1)
-  deriv_beta_alpha <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]
+  deriv_delta_mu <- matrix(as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)
+                                     [-1, -1, drop = FALSE]), (J - 1) * (K - 1), 1)
+  deriv_beta_alpha <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1, drop = FALSE]
   deriv_delta_alpha <- "[<-"(matrix(0, (J - 1) * (K - 1), J - 1),
                              cbind(1:((K - 1) * (J - 1)), rep(1:(J - 1), each = K - 1)),
-                             as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]))
+                             as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)
+                                       [-1, -1, drop = FALSE]))
   deriv_delta_beta <- "[<-"(matrix(0, (J - 1) * (K - 1), K - 1),
                             cbind(seq(1, (J - 1) * (K - 1)), rep(1:(K - 1), J - 1)),
-                            as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]))
+                            as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)
+                                      [-1, -1, drop = FALSE]))
   if (!use_band) {
     index_weights_age <- cbind(
       1:((K - 1) * (J - 2)) + K - 1,
