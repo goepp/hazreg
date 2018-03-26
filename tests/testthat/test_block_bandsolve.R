@@ -20,7 +20,20 @@ test_that("block_bandsolve is equivalent to solve", {
   expect_equal(block_bandsolve(mat_rotated, vect, mat_as_rotated = TRUE), solve(mat, vect))
 })
 
-# test_that("block bandsolve works with ")
+set.seed(0)
+A <- matrix(rnorm(36), 6, 6)
+A[, 1] <- 0
+A[1, ] <- 0
+B <- matrix(rnorm(24), 6, 4)
+D <- diag(rnorm(4)) + rbind(cbind(0, diag(rnorm(3))), 0)
+mat <- rbind(cbind(A + t(A), B),
+             cbind(t(B), D + t(D)))
+vect <- rnorm(10)
+lim <- 6
+
+test_that("block bandsolve works with A has zero-valued columns and rows", {
+  expect_equal(block_bandsolve(mat, vect, FALSE, lim), Solve(mat, vect))
+})
 
 
 

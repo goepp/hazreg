@@ -22,7 +22,7 @@ test_that("dimensions of par, O, and R must agree", {
 
 set.seed(0)
 K <- 3
-J <- 3
+J <- 4
 O <- matrix(rpois(K * J, 1), K, J)
 R <- matrix(rpois(K * J, 10), K, J)
 par <- rnorm(K * J)
@@ -51,3 +51,24 @@ test_that("hessian_aci is the derivative of score_aci", {
                (score_aci(par + epsi * (1:(K * J) == 6), O, R, pen, weights_age, weights_cohort) -
                   score_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-3)
 })
+
+set.seed(0)
+K <- 3
+J <- 4
+O <- matrix(rpois(K * J, 1), K, J)
+R <- matrix(rpois(K * J, 10), K, J)
+par <- rnorm(K * J)
+pen <- 1000
+weights_age <- matrix(rnorm((K - 1) * (J - 1)), K - 1, J - 1)
+weights_cohort <- matrix(rnorm((K - 1) * (J - 1)), K - 1, J - 1)
+
+lim <- J + K - 1
+aa <- hessian_aci(old_par, O, R, pen, weights_age, weights_cohort, use_band = TRUE)
+bb <- hessian_aci(old_par, O, R, pen, weights_age, weights_cohort)
+aa[[1]] - bb[1:lim, 1:lim] # OK
+aa[[2]] - bb[1:lim, -(1:lim)] # OK
+rot2mat(aa[[3]]) - bb[-(1:lim), -(1:lim)] # TODO: NOT OK
+
+# test_that("hessian_aci yiels the same result with and without use_band", {
+#
+# })
