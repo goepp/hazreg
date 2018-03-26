@@ -340,7 +340,8 @@ raster_fct <- function(fct) {
     mutate(value = as.factor(value)) %>%
     ggplot(., aes(cohort, age, fill = value)) +
     geom_raster() +
-    theme(legend.position = 'none')
+    theme(legend.position = 'none',
+          axis.text.x = element_text(angle = 45))
   )
 }
 loglik_aci_sel_old <- function(par, O, R, sel, L) {
