@@ -7,7 +7,7 @@ Author: Vivien Goepp
 Maintainer: Vivien Goepp <vivien.goepp@gmail.com>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-License: MIT + file LICENSE
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 URL: http://github.com/goepp/hazreg
