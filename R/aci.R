@@ -651,8 +651,10 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
       cat('progress:', ind_pen / length(pen_vect) * 100, '% \n')
       ind_pen <-  ind_pen + 1
       # par <- par * 0
-      # weights_age <- weights_age * 0 + 1
-      # weights_cohort <- weights_cohort * 0 + 1
+      weights_age[] <- 1
+      weights_cohort[] <- 1
+      valve_age[] <- 1
+      valve_cohort[] <- 1
     }
     old_par <- par
     if (ind_pen == length(pen_vect) + 1) break
