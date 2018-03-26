@@ -400,7 +400,7 @@ par2haz_aci_sel <- function(par, O, R, sel_array) {
 #' @export
 loglik_aci_sel <- function(par, O, R, sel_array) {
   if (any(dim(O) != dim(R)) | (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
-  if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
+  if (O < 0 || R < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
   if (any(dim(sel_array)[1:2] != c(K - 1, J - 1))) {
