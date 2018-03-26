@@ -24,6 +24,7 @@ NULL
 seq_geom <- function(a, b, length.out) {
   return(a * (b / a) ^ ((0:(length.out - 1))/(length.out - 1)))
 }
+#' @export
 reverselog_trans <- function(base = exp(1)) {
   trans <- function(x) -log(x, base)
   inv <- function(x) base ^ (-x)
@@ -198,7 +199,7 @@ exhaustive_stat_sel <- function(exhaust, sel) {
 #'                      cbind(t(B), D + t(D)))
 #' vect <- rnorm(10)
 #' lim <- 6
-#' max(band_prod(mat, vect, lim) - solve(mat, vect))
+#' max(block_bandsolve(mat, vect, lim) - solve(mat, vect))
 #'
 #' ## With mat_as_rotated = TRUE
 #' set.seed(0)
@@ -211,10 +212,10 @@ exhaustive_stat_sel <- function(exhaust, sel) {
 #' mat <- rbind(cbind(mat_rotated$A, mat_rotated$B),
 #'                      cbind(t(mat_rotated$B), rot2mat(mat_rotated$D)))
 #' vect <- rnorm(10)
-#' max(band_prod(mat_rotated, vect, mat_as_rotated = TRUE) - solve(mat, vect))
+#' max(block_bandsolve(mat_rotated, vect, mat_as_rotated = TRUE) - solve(mat, vect))
 #' }
 #' @export
-band_prod <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
+block_bandsolve <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
   if (mat_as_rotated) {
     if (nrow(mat$A) != ncol(mat$A)) {
       stop("Error: upper-left matrix not square")

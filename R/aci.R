@@ -522,7 +522,7 @@ ridge_solver_aci_old <- function(O, R, pen, use_band = FALSE, maxiter = 1000) {
   old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (use_band) {
-      par <- old_par - band_prod_rotated(hessian_aci(old_par, O, R, pen, use_band = TRUE),
+      par <- old_par - block_bandsolve_rotated(hessian_aci(old_par, O, R, pen, use_band = TRUE),
                                          score_aci(old_par, O, R, pen))
     } else {
       par <- old_par - Solve(hessian_aci(old_par, O, R, pen),
@@ -571,7 +571,7 @@ ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
   if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (use_band) {
-      par <- old_par - band_prod(
+      par <- old_par - block_bandsolve(
         hessian_aci(old_par, O, R, pen, weights_age, weights_cohort, use_band = TRUE),
         score_aci(old_par, O, R, pen, weights_age, weights_cohort),
         mat_as_rotated = TRUE,
