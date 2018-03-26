@@ -404,9 +404,11 @@ loglik_aci_sel <- function(par, O, R, sel_array) {
   K <- nrow(O)
   J <- ncol(O)
   if (any(dim(sel_array)[1:2] != c(K - 1, J - 1))) {
-    stop("Error : sel_array dimensions do not agree with exhaustive statistics")
+    stop("Error : dimensions of O, R, and sel_array must agree")
   }
-  if (length(par) != dim(sel_array)[3]) stop("Error: dimensions of par and sel_array must agree")
+  if (length(par) != dim(sel_array)[3] + K + J - 1) {
+    stop("Error: dimensions of par and sel_array must agree")
+  }
   # L <- dim(sel_array)[3]
   mu <- par[1]
   ext_alpha <- c(0, par[2:J])
