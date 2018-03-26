@@ -86,9 +86,14 @@ valve2sel_aci <- function(valve_age, valve_cohort, epsilon = 1e-8) {
     }
   }
   graph <- graph_from_adjacency_matrix(adjacency, mode = "undirected")
-  (matrix(clusters(graph)$membership, K - 1, J - 1) %>%
-      'rownames<-'(rownames(valve_age)) %>%
-      'colnames<-'(colnames(valve_cohort)))
+  sel_fct <- (matrix(clusters(graph)$membership, K - 1, J - 1) %>%
+                'rownames<-'(rownames(valve_age)) %>%
+                'colnames<-'(colnames(valve_cohort)))
+  L <- nlevels(as.factor(sel))
+  sel_array <- lapply(1:L, function(ind) sel == ind) %>%
+    unlist() %>%
+    array(., dim = c(K - 1, J - 1, L))
+  list('fct' = sel_fct, 'array' = sel_array)
 }
 #' @export
 par2haz_sel_aci_old <- function(par, sel, J, K, haz.log = FALSE) {
@@ -207,17 +212,17 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
   ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
   deriv_diag_mu <- sum(exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)
   deriv_diag_alpha <- diag(sapply(2:J,
-    function(ind_j) sum(exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+") +
-                               ext_delta[, ind_j, drop = FALSE]) * R[, ind_j])), J - 1, J - 1)
+                                  function(ind_j) sum(exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+") +
+                                                            ext_delta[, ind_j, drop = FALSE]) * R[, ind_j])), J - 1, J - 1)
   deriv_diag_beta <- diag(sapply(2:K,
-    function(ind_k) sum(exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+") +
-                              ext_delta[ind_k, ]) * R[ind_k, ])), K - 1, K - 1)
+                                 function(ind_k) sum(exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+") +
+                                                           ext_delta[ind_k, ]) * R[ind_k, ])), K - 1, K - 1)
   deriv_alpha_mu <- matrix(sapply(2:J,
-    function(ind_j) sum(exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+") +
-                              ext_delta[, ind_j]) * R[, ind_j])), J - 1, 1)
+                                  function(ind_j) sum(exp(outer(ext_beta, mu + ext_alpha[ind_j], FUN = "+") +
+                                                            ext_delta[, ind_j]) * R[, ind_j])), J - 1, 1)
   deriv_beta_mu <- matrix(sapply(2:K,
-    function(ind_k) sum(exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+") +
-                              ext_delta[ind_k,]) * R[ind_k,])), K - 1, 1)
+                                 function(ind_k) sum(exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+") +
+                                                           ext_delta[ind_k,]) * R[ind_k,])), K - 1, 1)
   deriv_delta_mu <- matrix(as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]), (J - 1) * (K - 1), 1)
   deriv_beta_alpha <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]
   deriv_delta_alpha <- "[<-"(matrix(0, (J - 1) * (K - 1), J - 1),
@@ -326,6 +331,18 @@ hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL,
     "dimnames<-"(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1))),
                       c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1)))))
 }
+#' @export
+raster_fct <- function(fct) {
+  print(
+    fct %>%
+    melt(varnames = c('cohort', 'age')) %>%
+    dplyr::as_data_frame() %>%
+    mutate(value = as.factor(value)) %>%
+    ggplot(., aes(cohort, age, fill = value)) +
+    geom_raster() +
+    theme(legend.position = 'none')
+  )
+}
 loglik_aci_sel_old <- function(par, O, R, sel, L) {
   K <- nrow(O)
   J <- ncol(O)
@@ -359,7 +376,8 @@ par2haz_aci_sel <- function(par, O, R, sel_array) {
   delta <- sweep(sel_array, MARGIN = 3, par[-(1:(J + K - 1))], '*') %>%
     apply(., MARGIN = c(1, 2), sum)
   ext_delta <- "[<-"(matrix(0, K, J), -1, -1, delta)
-  exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta)
+  exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) %>%
+    'dimnames<-'(dimnames(O))
 }
 #' Negative lok-likelihood in the age-cohort-interaction model with constaints
 #'
@@ -574,7 +592,7 @@ ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
 aridge_solver_aci <- function(O, R, pen_vect, sample_size,
                               use_band = FALSE,
                               maxiter = 1000 * length(pen_vect)) {
-  sel_ls <- par_sel_ls <- haz_sel_ls <- vector('list', length(pen_vect))
+  sel <- par_sel <- haz_sel <- vector('list', length(pen_vect))
   bic <- aic <- ebic <- rep(NA, length(pen_vect))
   epsilon_age <- 1e-5
   epsilon_cohort <- 1e-5
@@ -595,8 +613,8 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
     old_valve_age <- valve_age
     old_valve_cohort <- valve_cohort
     par <- ridge_solver_aci(O, R, pen = pen_vect[ind_pen],
-                             weights_age, weights_cohort,
-                             old_par = old_par, use_band = use_band)$par
+                            weights_age, weights_cohort,
+                            old_par = old_par, use_band = use_band)$par
     delta <- matrix(par[-(1:(J + K - 1))], K - 1, J - 1)
     weights_age[, ] <- 1 / (t(apply(cbind(0, delta), 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(rbind(0, delta), 2, diff) ^ 2 + epsilon_cohort ^ 2)
@@ -615,25 +633,17 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
                       abs(old_valve_cohort - valve_cohort)) <= 1e-6
     # old_par <- par
     if (converged2) {
-      sel_ls[[ind_pen]] <- valve2sel_aci(valve_age, valve_cohort)
-      sel_ls[[ind_pen]] %>%
-        melt(varnames = c('cohort', 'age')) %>%
-        dplyr::as_data_frame() %>%
-        mutate(value = as.factor(value)) %>%
-        ggplot(., aes(cohort, age, fill = value)) +
-        geom_raster() +
-        theme(legend.position = 'none')
-      L <- max(sel_ls[[ind_pen]])
-      sel_array <- lapply(1:L, function(ind) sel_ls[[ind_pen]] == ind) %>%
-        unlist() %>%
-        array(., dim = c(K - 1, J - 1, L))
-      par_sel_ls[[ind_pen]] <- ridge_solver_aci_sel(O, R, sel_array)$par
-      haz_sel_ls[[ind_pen]] <- par2haz_aci_sel(par_sel_ls[[ind_pen]], O, R, sel_array) %>%
-        'dimnames<-'(dimnames(O))
+      selection <- valve2sel_aci(valve_age, valve_cohort)
+      sel[[ind_pen]] <- selection$fct
+      sel[[ind_pen]] %>% raster_fct()
+      sel_array <- selection$array
+      L <- dim(sel_array)[3]
+      par_sel[[ind_pen]] <- ridge_solver_aci_sel(O, R, sel_array)$par
+      haz_sel[[ind_pen]] <- par2haz_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
+      aic[ind_pen] <- 2 * L + 2 * loglik_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
       bic[ind_pen] <- log(sample_size) * L +
-        2 * loglik_aci_sel(par_sel_ls[[ind_pen]], O, R, sel_array)
-      ebic[ind_pen] <- bic[ind_pen] +  2 * log(choose(J * K, L) )
-      aic[ind_pen] <- 2 * L + 2 * loglik_aci_sel(par_sel_ls[[ind_pen]], O, R, sel_array)
+        2 * loglik_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
+      ebic[ind_pen] <- bic[ind_pen] +  2 * log(choose(J * K, L))
       cat('progress:', ind_pen / length(pen_vect) * 100, '% \n')
       ind_pen <-  ind_pen + 1
       # par <- par * 0
@@ -646,7 +656,7 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
   if (iter == maxiter) {
     warning("Warning: aridge did not converge")
   }
-  return(list("par" = par_sel_ls, "haz" = haz_sel_ls, "sel" = sel_ls,
+  return(list("par" = par_sel, "haz" = haz_sel, "sel" = sel,
               "bic" = bic, "aic" = aic, 'ebic' = ebic))
 }
 
