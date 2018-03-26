@@ -198,6 +198,7 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
   if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
+  if (K <= 2 || J <= 2) stop("Error: J and K must both be equal or greater than 3")
   if (is.null(weights_age)) {
     weights_age <- matrix(1, K - 1, J - 1)
   }
