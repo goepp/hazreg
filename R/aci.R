@@ -89,8 +89,8 @@ valve2sel_aci <- function(valve_age, valve_cohort, epsilon = 1e-8) {
   sel_fct <- (matrix(clusters(graph)$membership, K - 1, J - 1) %>%
                 'rownames<-'(rownames(valve_age)) %>%
                 'colnames<-'(colnames(valve_cohort)))
-  L <- nlevels(as.factor(sel))
-  sel_array <- lapply(1:L, function(ind) sel == ind) %>%
+  L <- nlevels(as.factor(sel_fct))
+  sel_array <- lapply(1:L, function(ind) sel_fct == ind) %>%
     unlist() %>%
     array(., dim = c(K - 1, J - 1, L))
   list('fct' = sel_fct, 'array' = sel_array)
