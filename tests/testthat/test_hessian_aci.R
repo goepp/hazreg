@@ -21,7 +21,7 @@ test_that("dimensions of par, O, and R must agree", {
 })
 
 set.seed(0)
-K <- 2
+K <- 3
 J <- 3
 O <- matrix(rpois(K * J, 1), K, J)
 R <- matrix(rpois(K * J, 10), K, J)

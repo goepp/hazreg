@@ -244,10 +244,10 @@ block_bandsolve <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
     A <- mat[1:lim, 1:lim]
     B <- mat[1:lim, (lim + 1):ncol(mat)]
     D <- mat[(lim + 1):nrow(mat), (lim + 1):ncol(mat)]
-    rotD <- rbind(
-      mat2rot(D[, apply(D, 1, function(x) any(x != 0))]),
-      rep(0, sum(apply(D, 1, function(x) all(x == 0))))
-      )
+    # rotD <- rbind(
+    #   mat2rot(D[, apply(D, 1, function(x) any(x != 0))]),
+    #   rep(0, sum(apply(D, 1, function(x) all(x == 0))))
+    #   )
     rotD <- mat2rot(D)
   }
   schur <- A - B %*% bandsolve(rotD, t(B))
