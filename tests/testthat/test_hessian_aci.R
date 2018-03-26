@@ -31,23 +31,23 @@ weights_age <- matrix(rnorm((K - 1) * (J - 1)), K - 1, J - 1)
 weights_cohort <- matrix(rnorm((K - 1) * (J - 1)), K - 1, J - 1)
 epsi <- 1e-9
 
-test_that("hessian_aci is the derivative of loglik_aci", {
-  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[1],
-               (loglik_aci(par + epsi * (1:(K * J) == 1), O, R, pen, weights_age, weights_cohort) -
-                  loglik_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-5)
-  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[2],
-               (loglik_aci(par + epsi * (1:(K * J) == 2), O, R, pen, weights_age, weights_cohort) -
-                  loglik_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-5)
-  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[3],
-               (loglik_aci(par + epsi * (1:(K * J) == 3), O, R, pen, weights_age, weights_cohort) -
-                  loglik_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-5)
-  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[4],
-               (loglik_aci(par + epsi * (1:(K * J) == 4), O, R, pen, weights_age, weights_cohort) -
-                  loglik_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-5)
-  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[5],
-               (loglik_aci(par + epsi * (1:(K * J) == 5), O, R, pen, weights_age, weights_cohort) -
-                  loglik_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-5)
-  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[6],
-               (loglik_aci(par + epsi * (1:(K * J) == 6), O, R, pen, weights_age, weights_cohort) -
-                  loglik_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-5)
+test_that("hessian_aci is the derivative of score_aci", {
+  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[1, ],
+               (score_aci(par + epsi * (1:(K * J) == 1), O, R, pen, weights_age, weights_cohort) -
+                  score_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-3)
+  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[2, ],
+               (score_aci(par + epsi * (1:(K * J) == 2), O, R, pen, weights_age, weights_cohort) -
+                  score_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-3)
+  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[3, ],
+               (score_aci(par + epsi * (1:(K * J) == 3), O, R, pen, weights_age, weights_cohort) -
+                  score_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-3)
+  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[4, ],
+               (score_aci(par + epsi * (1:(K * J) == 4), O, R, pen, weights_age, weights_cohort) -
+                  score_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-3)
+  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[5, ],
+               (score_aci(par + epsi * (1:(K * J) == 5), O, R, pen, weights_age, weights_cohort) -
+                  score_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-3)
+  expect_equal(hessian_aci(par, O, R, pen, weights_age, weights_cohort)[6, ],
+               (score_aci(par + epsi * (1:(K * J) == 6), O, R, pen, weights_age, weights_cohort) -
+                  score_aci(par, O, R, pen, weights_age, weights_cohort)) / epsi, tol = 1e-3)
 })

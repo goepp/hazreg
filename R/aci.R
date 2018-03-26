@@ -187,7 +187,8 @@ score_aci <- function(par, O, R, pen, weights_age = NULL,
   )
   deriv_delta_mat <- (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R - O)[-1, -1]
   deriv_delta <- as.vector(deriv_delta_mat + pen_term)
-  c(deriv_mu, deriv_alpha, deriv_beta, deriv_delta)
+  c(deriv_mu, deriv_alpha, deriv_beta, deriv_delta) %>%
+    setNames(c('mu', rep('alpha', J - 1), rep('beta', K - 1), rep('delta', (J - 1) * (K - 1))))
 }
 #' @rdname loglik_aci
 #' @export
