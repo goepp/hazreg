@@ -194,7 +194,7 @@ score_aci <- function(par, O, R, pen, weights_age = NULL,
 #' @export
 hessian_aci <- function(par, O, R, pen, weights_age = NULL,
                         weights_cohort = NULL, use_band = FALSE) {
-  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (any(dim(O) != dim(R)) | (length(par) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
   if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
@@ -268,13 +268,15 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
       pen * as.vector(weights_age + "["(cbind(weights_age, 0), 1:(K - 1), -1)) +
         pen * as.vector(weights_cohort + weights_cohort %>% rbind(0) %>% "["(-1, 1:(J - 1))) +
         as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]),
-      -pen * "[<-"(rep(0, (K - 1) * (J - 1)), index_cohort, as.vector(weights_cohort[-1, ])),
+      -pen * "[<-"(rep(0, (K - 1) * (J - 1)), index_cohort, as.vector(weights_cohort[-1, , drop = FALSE])),
       matrix(rep(0, (K - 1) * (J - 1) * (K - 3)), (K - 1) * (J - 1), K - 3),
       -pen * "[<-"(rep(0, (K - 1) * (J - 1)), 1:((K - 2) * (J - 1)), as.vector(weights_age[-1, ]))
     )
     list('A' = cbind(rbind(deriv_diag_mu, deriv_alpha_mu, deriv_beta_mu),
                      rbind(t(deriv_alpha_mu), deriv_diag_alpha, deriv_beta_alpha),
-                     rbind(t(deriv_beta_mu), t(deriv_beta_alpha), deriv_diag_beta)),
+                     rbind(t(deriv_beta_mu), t(deriv_beta_alpha), deriv_diag_beta)) %>%
+           'dimnames<-'(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1)),
+                             c("mu", rep("alpha", J - 1), rep("beta", K - 1)))),
          'B' = t(cbind(deriv_delta_mu, deriv_delta_alpha, deriv_delta_beta)),
          'D' = deriv_diag_delta)
   }
