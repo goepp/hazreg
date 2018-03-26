@@ -226,8 +226,8 @@ band_prod <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
     if ((nrow(mat$A) + nrow(mat$D)) != length(vect)) {
       stop('Error: dimensions of matrix and vector must agree')
     }
-    S1 <- vect[1:ncol(mat$A)]
-    S2 <- vect[-seq_along(S1)]
+    vect1 <- vect[1:ncol(mat$A)]
+    vect2 <- vect[-seq_along(vect1)]
     A <- mat$A
     B <- mat$B
     rotD <- mat$D
@@ -238,19 +238,19 @@ band_prod <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
     if (!isSymmetric(mat) || ncol(mat) != length(as.vector(vect))) {
       error("Error: dimensions of hessian and score do not match")
     }
-    S1 <- vect[1:lim]
-    S2 <- vect[(lim + 1):(ncol(mat))]
+    vect1 <- vect[1:lim]
+    vect2 <- vect[(lim + 1):(ncol(mat))]
     A <- mat[1:lim, 1:lim]
     B <- mat[1:lim, (lim + 1):ncol(mat)]
     D <- mat[(lim + 1):nrow(mat), (lim + 1):ncol(mat)]
     rotD <- mat2rot(D)
   }
   schur <- A - B %*% bandsolve(rotD, t(B))
-  temp1 <- Solve(schur, S1)
-  temp2 <- Solve(schur, B %*% bandsolve(rotD, S2))
+  temp1 <- Solve(schur, vect1)
+  temp2 <- Solve(schur, B %*% bandsolve(rotD, vect2))
   c(as.vector(temp1 - temp2),
     as.vector(-bandsolve(rotD, t(B) %*% temp1) +
-                bandsolve(rotD, S2) +
+                bandsolve(rotD, vect2) +
                 bandsolve(rotD, t(B) %*% temp2))
   )
 }
