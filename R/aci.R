@@ -278,7 +278,9 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
                      rbind(t(deriv_beta_mu), t(deriv_beta_alpha), deriv_diag_beta)) %>%
            'dimnames<-'(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1)),
                              c("mu", rep("alpha", J - 1), rep("beta", K - 1)))),
-         'B' = t(cbind(deriv_delta_mu, deriv_delta_alpha, deriv_delta_beta)),
+         'B' = t(cbind(deriv_delta_mu, deriv_delta_alpha, deriv_delta_beta)) %>%
+           'dimnames<-'(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1)),
+                             rep("delta", (J - 1) * (K - 1)))),
          'D' = deriv_diag_delta)
   }
 }
