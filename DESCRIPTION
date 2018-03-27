@@ -11,7 +11,16 @@ License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: http://github.com/goepp/hazreg
-# Imports: dplyr, limSolve, igraph, tidyverse, reshape2
+Imports: 
+    plyr,
+    pryr,
+    limSolve,
+    igraph,
+    tidyverse,
+    reshape2,
+    mvtnorm,
+    scales,
+    bandsolve
 RoxygenNote: 6.0.1
 Suggests:
     testthat
