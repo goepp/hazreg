@@ -7,6 +7,7 @@
 #' @section The Age-cohort model
 #' @section The Age-cohort interaction model
 #' @section The interaction model
+#' @import tidyverse
 #'
 #' @docType package
 #' @name hazreg
@@ -117,7 +118,6 @@ rsurv <- function(n, cuts, alpha) {
 #' @return \code{surv_data}, a data frame of observations with age and cohort.
 #' @examples
 #' \dontrun{
-#' library(tidyverse)
 #' mu <- log(1e-2)
 #' age_seq <- seq(0, 100, length.out = 100)
 #' cohort_seq <- seq(1900, 1900 + age_seq[101], length.out = age_length + 1)
@@ -290,10 +290,10 @@ valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
 }
 #' @export
 grid2raster <- function(grid_df, title = NULL) {
-  tidyverse::ggplot(grid_df, aes(cohort, age, fill = value)) +
-    tidyverse::geom_raster() +
-    tidyverse::ggtitle(title) +
-    tidyverse::theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  ggplot2::ggplot(grid_df, aes(cohort, age, fill = value)) +
+    ggplot2::geom_raster() +
+    ggplot2::ggtitle(title) +
+    ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 #' @export
 sel2segment <- function(sel, cuts_age, cuts_cohort) {
@@ -533,7 +533,7 @@ check_derivate_score <- function(par, func, deriv, ...) {
   epsilon_vect <- 10 ^ -seq(1, 6, by = 1)
   p <- length(par)
   l <- length(epsilon_vect)
-  score_df <- tidyverse::data_frame(
+  score_df <- dplyr::data_frame(
     score_ = c(rep(deriv(par, ...), l), rep(NA, p * l)),
     # score_ = c(rep(deriv(par, exhaust, adj, pen), l), rep(NA, p * l)),
     type = c(rep("functional", p * l), rep("numerical", p * l)),
@@ -550,15 +550,15 @@ check_derivate_score <- function(par, func, deriv, ...) {
     }
     score_df$score_[score_df$epsilon == epsilon_ind & score_df$type == "numerical"] <- score_num
   }
-  functional_df <- score_df %>% tidyverse::filter(type == "functional")
-  numerical_df <- score_df %>% tidyverse::filter(type == "numerical")
+  functional_df <- score_df %>% dplyr::filter(type == "functional")
+  numerical_df <- score_df %>% dplyr::filter(type == "numerical")
   mse_df <- functional_df %>%
-    tidyverse::mutate(squared_diff = (functional_df$score_ - numerical_df$score_) ^ 2) %>%
-    tidyverse::group_by(epsilon) %>%
-    tidyverse::summarise(mse = sum(squared_diff)) %>%
-    tidyverse::ungroup() %>%
+    dplyr::mutate(squared_diff = (functional_df$score_ - numerical_df$score_) ^ 2) %>%
+    dplyr::group_by(epsilon) %>%
+    dplyr::summarise(mse = sum(squared_diff)) %>%
+    dplyr::ungroup() %>%
     as.data.frame() %>%
-    tidyverse::mutate(epsilon = as.numeric(levels(epsilon)))
+    dplyr::mutate(epsilon = as.numeric(levels(epsilon)))
   list('vect' = score_df, 'mse' = mse_df)
 }
 #' @export
@@ -566,7 +566,7 @@ check_derivate_hessian <- function(par, func, deriv, ...) {
   epsilon_vect <- 10 ^ -seq(1, 6, by = 1)
   p <- length(par)
   l <- length(epsilon_vect)
-  hessian_df <- tidyverse::data_frame(
+  hessian_df <- dplyr::data_frame(
     hessian_ = c(rep(as.vector(deriv(par, ...)), l),
                  rep(NA, p ^ 2 * l)),
     type = c(rep("functional", p ^ 2 * l),
@@ -583,14 +583,14 @@ check_derivate_hessian <- function(par, func, deriv, ...) {
     }
     hessian_df$hessian_[hessian_df$epsilon == epsilon_ind & hessian_df$type == "numerical"] <- hessian_num
   }
-  functional_df <- hessian_df %>% tidyverse::filter(type == "functional")
-  numerical_df <- hessian_df %>% tidyverse::filter(type == "numerical")
+  functional_df <- hessian_df %>% dplyr::filter(type == "functional")
+  numerical_df <- hessian_df %>% dplyr::filter(type == "numerical")
   mse_df <- functional_df %>%
-    tidyverse::mutate(squared_diff = (functional_df$hessian_ - numerical_df$hessian_) ^ 2) %>%
-    tidyverse::group_by(epsilon) %>%
-    tidyverse::summarise(mse = sum(squared_diff)) %>%
-    tidyverse::ungroup() %>%
+    dplyr::mutate(squared_diff = (functional_df$hessian_ - numerical_df$hessian_) ^ 2) %>%
+    dplyr::group_by(epsilon) %>%
+    dplyr::summarise(mse = sum(squared_diff)) %>%
+    dplyr::ungroup() %>%
     as.data.frame() %>%
-    tidyverse::mutate(epsilon = as.numeric(levels(epsilon)))
+    dplyr::mutate(epsilon = as.numeric(levels(epsilon)))
   list('vect' = hessian_df, 'mse' = mse_df)
 }

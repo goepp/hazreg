@@ -24,7 +24,6 @@ Generate age and cohort observations
 }
 \examples{
 \dontrun{
-library(tidyverse)
 mu <- log(1e-2)
 age_seq <- seq(0, 100, length.out = 100)
 cohort_seq <- seq(1900, 1900 + age_seq[101], length.out = age_length + 1)
