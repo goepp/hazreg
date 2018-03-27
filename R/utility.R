@@ -129,7 +129,6 @@ rsurv <- function(n, cuts, alpha) {
 #' }
 #' @export
 map_surv <- function(map, sample_size, dob_dist, dob_dist_par = NULL) {
-  require(pryr)
   if (is.character(dob_dist)) {
     if (is.null(dob_dist_par)) error("error: no parameter supplied for dob distribution")
     distf = paste0("r", dob_dist)
@@ -169,7 +168,7 @@ exhaustive_stat <- function(surv_data, cuts_age, cuts_cohort) {
 }
 #' @export
 exhaustive_stat_sel <- function(exhaust, sel) {
-  if (any(dim(exhaust$O) != dim(sel))) stop("error: dimensions of exhaust and selection must agree")
+  if (any(dim(exhaust$O) != dim(sel))) stop("Error: dimensions of exhaust and selection must agree")
   O <- lapply(levels(as.factor(sel)),
               function(sel_val) sum(exhaust$O[which(sel == sel_val, arr.ind = TRUE)])) %>%
     unlist()
