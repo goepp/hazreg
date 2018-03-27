@@ -361,6 +361,7 @@ raster <- function(mat, type = 'factor') {
         theme(axis.text.x = element_text(angle = 45))
     )
   }
+  invisible(p)
 }
 loglik_aci_sel_old <- function(par, O, R, sel, L) {
   K <- nrow(O)
