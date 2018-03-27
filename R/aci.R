@@ -352,14 +352,15 @@ raster <- function(mat, type = 'factor') {
       p +
         geom_raster(aes(fill = as.factor(value))) +
         theme(legend.position = 'none',
-              axis.text.x = element_text(angle = 45),
-              hjust = 1)
+              axis.text.x = element_text(angle = 45,
+                                         hjust = 1))
       )
   } else if (type == 'numeric') {
     print(
       p +
         geom_raster(aes(fill = value)) +
-        theme(axis.text.x = element_text(angle = 45),
+        theme(axis.text.x = element_text(angle = 45,
+                                         hjust = 1),
               hjust = 1)
     )
   }
