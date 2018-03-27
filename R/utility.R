@@ -289,6 +289,31 @@ valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
       'colnames<-'(colnames(valve_cohort)))
 }
 #' @export
+raster <- function(mat, type = 'factor') {
+  p <- mat %>%
+    melt(varnames = c('cohort', 'age')) %>%
+    dplyr::as_data_frame() %>%
+    dplyr::mutate(value = value) %>%
+    ggplot2::ggplot(., aes(cohort, age))
+  if (type == 'factor') {
+    print(
+      p +
+        ggplot2::geom_raster(aes(fill = as.factor(value))) +
+        ggplot2::theme(legend.position = 'none',
+                         axis.text.x = element_text(angle = 45,
+                                                    hjust = 1))
+    )
+  } else if (type == 'numeric') {
+    print(
+      p +
+        ggplot2::geom_raster(aes(fill = value)) +
+        ggplot2::theme(axis.text.x = element_text(angle = 45,
+                                                    hjust = 1))
+    )
+  }
+  invisible(p)
+}
+#' @export
 grid2raster <- function(grid_df, title = NULL) {
   ggplot2::ggplot(grid_df, aes(cohort, age, fill = value)) +
     ggplot2::geom_raster() +

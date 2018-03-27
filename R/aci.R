@@ -340,31 +340,6 @@ hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL,
     "dimnames<-"(list(c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1))),
                       c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1)))))
 }
-#' @export
-raster <- function(mat, type = 'factor') {
-  p <- mat %>%
-    melt(varnames = c('cohort', 'age')) %>%
-    dplyr::as_data_frame() %>%
-    tidyverse::mutate(value = value) %>%
-    tidyverse::ggplot(., aes(cohort, age))
-  if (type == 'factor') {
-    print(
-      p +
-        tidyverse::geom_raster(aes(fill = as.factor(value))) +
-        tidyverse::theme(legend.position = 'none',
-              axis.text.x = element_text(angle = 45,
-                                         hjust = 1))
-      )
-  } else if (type == 'numeric') {
-    print(
-      p +
-        tidyverse::geom_raster(aes(fill = value)) +
-        tidyverse::theme(axis.text.x = element_text(angle = 45,
-                                         hjust = 1))
-    )
-  }
-  invisible(p)
-}
 loglik_aci_sel_old <- function(par, O, R, sel, L) {
   K <- nrow(O)
   J <- ncol(O)
