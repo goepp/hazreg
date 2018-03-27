@@ -360,8 +360,7 @@ raster <- function(mat, type = 'factor') {
       p +
         geom_raster(aes(fill = value)) +
         theme(axis.text.x = element_text(angle = 45,
-                                         hjust = 1),
-              hjust = 1)
+                                         hjust = 1))
     )
   }
   invisible(p)
