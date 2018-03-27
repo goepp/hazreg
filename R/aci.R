@@ -658,7 +658,7 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
     if (converged2) {
       selection <- valve2sel_aci(valve_age, valve_cohort)
       sel[[ind_pen]] <- selection$fct
-      if (verbose) sel[[ind_pen]] %>% raster_fct()
+      if (verbose) sel[[ind_pen]] %>% raster('factor')
       sel_array <- selection$array
       L <- dim(sel_array)[3]
       par_sel[[ind_pen]] <- ridge_solver_aci_sel(O, R, sel_array)$par
