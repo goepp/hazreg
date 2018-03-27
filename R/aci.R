@@ -623,7 +623,7 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
   old_par <- rep(0, J * K)
   ind_pen <- 1
   for (iter in 1:maxiter) {
-    cat("iter =", iter, '\n')
+    if (verbose) cat("iter =", iter, '\n')
     old_valve_age <- valve_age
     old_valve_cohort <- valve_cohort
     par <- ridge_solver_aci(O, R, pen = pen_vect[ind_pen],
@@ -641,8 +641,8 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
     # max(abs(par - old_par))
     # converged <- sum(is.na(abs(par - old_par) / abs(old_par))) ||
     #   (max(abs(par - old_par) / abs(old_par)) <= 1e-3)
-    max(abs(old_valve_age - valve_age),
-        abs(old_valve_cohort - valve_cohort)) %>% print()
+    # max(abs(old_valve_age - valve_age),
+    #     abs(old_valve_cohort - valve_cohort)) %>% print()
     converged2 <- max(abs(old_valve_age - valve_age),
                       abs(old_valve_cohort - valve_cohort)) <= 1e-6
     # old_par <- par
