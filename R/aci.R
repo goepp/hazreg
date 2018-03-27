@@ -604,7 +604,8 @@ ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
 #' @family adaptive_ridge
 aridge_solver_aci <- function(O, R, pen_vect, sample_size,
                               use_band = FALSE,
-                              maxiter = 1000 * length(pen_vect)) {
+                              maxiter = 1000 * length(pen_vect),
+                              verbose = FALSE) {
   sel <- par_sel <- haz_sel <- vector('list', length(pen_vect))
   bic <- aic <- ebic <- rep(NA, length(pen_vect))
   epsilon_age <- 1e-5
@@ -648,7 +649,7 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
     if (converged2) {
       selection <- valve2sel_aci(valve_age, valve_cohort)
       sel[[ind_pen]] <- selection$fct
-      sel[[ind_pen]] %>% raster_fct()
+      if (verbose) sel[[ind_pen]] %>% raster_fct()
       sel_array <- selection$array
       L <- dim(sel_array)[3]
       par_sel[[ind_pen]] <- ridge_solver_aci_sel(O, R, sel_array)$par
