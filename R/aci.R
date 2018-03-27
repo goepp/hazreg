@@ -358,7 +358,7 @@ raster <- function(mat, type = 'factor') {
     print(
       p +
         geom_raster(aes(fill = value)) +
-        theme(legend.position = 'none')
+        theme(axis.text.x = element_text(angle = 45))
     )
   }
 }
