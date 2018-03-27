@@ -250,10 +250,10 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
         weights_cohort + weights_cohort %>% rbind(0) %>% "["(-1, 1:(J - 1))
     ))
     deriv_pen_weights <- "[<-"("[<-"(matrix(0, (K - 1) * (J - 1), (K - 1) * (J - 1)),
-                                     index_weights_age, -as.vector(weights_age[, -1])),
-                               index_weights_cohort, -as.vector(weights_cohort[-1, ]))
+                                     index_weights_age, -as.vector(weights_age[, -1, drop = FALSE])),
+                               index_weights_cohort, -as.vector(weights_cohort[-1, , drop = FALSE]))
     deriv_diag_delta <- diag(as.vector(
-      (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]),
+      (exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1, drop = FALSE]),
       (J - 1) * (K - 1), (J - 1) * (K - 1)) +
       pen * (deriv_pen_weights + t(deriv_pen_weights) + deriv_pen_diag)
 
@@ -268,10 +268,10 @@ hessian_aci <- function(par, O, R, pen, weights_age = NULL,
     deriv_diag_delta <- cbind(
       pen * as.vector(weights_age + "["(cbind(weights_age, 0), 1:(K - 1), -1)) +
         pen * as.vector(weights_cohort + weights_cohort %>% rbind(0) %>% "["(-1, 1:(J - 1))) +
-        as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1]),
+        as.vector((exp(outer(ext_beta, mu + ext_alpha, FUN = "+") + ext_delta) * R)[-1, -1, drop = FALSE]),
       -pen * "[<-"(rep(0, (K - 1) * (J - 1)), index_cohort, as.vector(weights_cohort[-1, , drop = FALSE])),
       matrix(rep(0, (K - 1) * (J - 1) * (K - 3)), (K - 1) * (J - 1), K - 3),
-      -pen * "[<-"(rep(0, (K - 1) * (J - 1)), 1:((K - 2) * (J - 1)), as.vector(weights_age[-1, ]))
+      -pen * "[<-"(rep(0, (K - 1) * (J - 1)), 1:((J - 2) * (K - 1)), as.vector(weights_age[, -1, drop = FALSE]))
     )
     list('A' = cbind(rbind(deriv_diag_mu, deriv_alpha_mu, deriv_beta_mu),
                      rbind(t(deriv_alpha_mu), deriv_diag_alpha, deriv_beta_alpha),
