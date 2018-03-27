@@ -341,17 +341,26 @@ hessian_aci_no_band <- function(par, O, R, pen, weights_age = NULL,
                       c("mu", rep("alpha", J - 1), rep("beta", K - 1), rep("delta", (J - 1) * (K - 1)))))
 }
 #' @export
-raster_fct <- function(fct) {
-  print(
-    fct %>%
+raster <- function(mat, type = 'factor') {
+  p <- mat %>%
     melt(varnames = c('cohort', 'age')) %>%
     dplyr::as_data_frame() %>%
-    mutate(value = as.factor(value)) %>%
-    ggplot(., aes(cohort, age, fill = value)) +
-    geom_raster() +
-    theme(legend.position = 'none',
-          axis.text.x = element_text(angle = 45))
-  )
+    mutate(value = value) %>%
+    ggplot(., aes(cohort, age))
+  if (type == 'factor') {
+    print(
+      p +
+        geom_raster(aes(fill = as.factor(value))) +
+        theme(legend.position = 'none',
+              axis.text.x = element_text(angle = 45))
+      )
+  } else if (type == 'numeric') {
+    print(
+      p +
+        geom_raster(aes(fill = value)) +
+        theme(legend.position = 'none')
+    )
+  }
 }
 loglik_aci_sel_old <- function(par, O, R, sel, L) {
   K <- nrow(O)
@@ -532,7 +541,7 @@ ridge_solver_aci_old <- function(O, R, pen, use_band = FALSE, maxiter = 1000) {
   for (iter in 1:maxiter) {
     if (use_band) {
       par <- old_par - block_bandsolve_rotated(hessian_aci(old_par, O, R, pen, use_band = TRUE),
-                                         score_aci(old_par, O, R, pen))
+                                               score_aci(old_par, O, R, pen))
     } else {
       par <- old_par - Solve(hessian_aci(old_par, O, R, pen),
                              score_aci(old_par, O, R, pen))
@@ -576,7 +585,7 @@ ridge_solver_aci_old <- function(O, R, pen, use_band = FALSE, maxiter = 1000) {
 #' @family ridge
 ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
                              weights_cohort = NULL, old_par = NULL,
-                             use_band = FALSE, maxiter = 1000) {
+                             use_band = FALSE, maxiter = 100) {
   if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (use_band) {
@@ -604,7 +613,7 @@ ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
 #' @family adaptive_ridge
 aridge_solver_aci <- function(O, R, pen_vect, sample_size,
                               use_band = FALSE,
-                              maxiter = 1000 * length(pen_vect),
+                              maxiter = 1000,
                               verbose = FALSE) {
   sel <- par_sel <- haz_sel <- vector('list', length(pen_vect))
   bic <- aic <- ebic <- rep(NA, length(pen_vect))
