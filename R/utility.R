@@ -500,9 +500,9 @@ aci_cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
     train_sel_ls <- train$sel
     exhaust_test_ls <-  lapply(train_sel_ls, function(sel) exhaustive_stat_sel(
       exhaustive_stat(dplyr::slice(data, sample_test),  cuts_age, cuts_cohort), sel))
-    score_mat[ind, ] <- mapply(FUN = function(par, exhaust_test) loglik_sel_interaction(par, exhaust_test$O,
-                                                                                        exhaust_test$R),
-                               par = train_par_ls, exhaust_test = exhaust_test_ls)
+    score_mat[ind, ] <- mapply(
+      FUN = function(par, exhaust_test) loglik_sel_interaction(par, exhaust_test$O, exhaust_test$R),
+      par = train_par_ls, exhaust_test = exhaust_test_ls)
     if (any(is.null(score_mat[ind, ]))) {
       stop('Error in call to aridge_solver_interaction')
     }
