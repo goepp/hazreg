@@ -58,15 +58,15 @@ reverselog_trans <- function(base = exp(1)) {
 #' }
 #' @export
 map_maker <- function(mu, age_coef, cohort_coef, age_seq, cohort_seq, islet_ls = NULL) {
-  library(pryr)
-  library(mvtnorm)
   ac.map <- exp(outer(c(0, cohort_coef), c(0, age_coef) + mu, FUN = "+"))
   colnames(ac.map) <- levels(cut(-1, age_seq, right = FALSE, dig.lab = 3))
   rownames(ac.map) <- levels(cut(-1, cohort_seq, right = FALSE, dig.lab = 4))
   islet.map <- 0 * ac.map
   if (!is.null(islet_ls)) {
     for (ind in 1:length(islet_ls)) {
-      myFun <- function(ind1, ind2) dmvnorm(c(ind1, ind2), mean = islet_ls[[ind]]$mean, sigma = islet_ls[[ind]]$sigma)
+      myFun <- function(ind1, ind2) mvtnorm::dmvnorm(
+        c(ind1, ind2), mean = islet_ls[[ind]]$mean, sigma = islet_ls[[ind]]$sigma
+        )
       myVecFun <- Vectorize(myFun, vectorize.args = c('ind1', 'ind2'))
       islet.map <- islet.map +
         outer(cohort_seq[-length(cohort_seq)], age_seq[-length(age_seq)], FUN = myVecFun) *
@@ -248,15 +248,15 @@ block_bandsolve <- function(mat, vect, mat_as_rotated = FALSE, lim = NULL) {
     #   mat2rot(D[, apply(D, 1, function(x) any(x != 0))]),
     #   rep(0, sum(apply(D, 1, function(x) all(x == 0))))
     #   )
-    rotD <- mat2rot(D)
+    rotD <- bandsolve::mat2rot(D)
   }
-  schur <- A - B %*% bandsolve(rotD, t(B))
-  temp1 <- Solve(schur, vect1)
-  temp2 <- Solve(schur, B %*% bandsolve(rotD, vect2))
+  schur <- A - B %*% bandsolve::bandsolve(rotD, t(B))
+  temp1 <- limSolve::Solve(schur, vect1)
+  temp2 <- limSolve::Solve(schur, B %*% bandsolve::bandsolve(rotD, vect2))
   c(as.vector(temp1 - temp2),
-    as.vector(-bandsolve(rotD, t(B) %*% temp1) +
-                bandsolve(rotD, vect2) +
-                bandsolve(rotD, t(B) %*% temp2))
+    as.vector(-bandsolve::bandsolve(rotD, t(B) %*% temp1) +
+                bandsolve::bandsolve(rotD, vect2) +
+                bandsolve::bandsolve(rotD, t(B) %*% temp2))
   )
 }
 #' @export
@@ -284,15 +284,17 @@ valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
       }
     }
   }
-  graph <- graph_from_adjacency_matrix(adjacency, mode = "undirected")
-  (matrix(clusters(graph)$membership, K, J) %>%
+  graph <- igraph::graph_from_adjacency_matrix(adjacency, mode = "undirected")
+  (matrix(igraph::clusters(graph)$membership, K, J) %>%
       'rownames<-'(rownames(valve_age)) %>%
       'colnames<-'(colnames(valve_cohort)))
 }
 #' @export
 grid2raster <- function(grid_df, title = NULL) {
-  ggplot(grid_df, aes(cohort, age, fill = value)) + geom_raster() +
-    ggtitle(title) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  tidyverse::ggplot(grid_df, aes(cohort, age, fill = value)) +
+    tidyverse::geom_raster() +
+    tidyverse::ggtitle(title) +
+    tidyverse::theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 #' @export
 sel2segment <- function(sel, cuts_age, cuts_cohort) {
@@ -395,7 +397,7 @@ exhaustive_stat_1d <- function(surv_data, cuts_age) {
 #' @export
 exhaustive_stat_2d <- function(surv_data, cuts_age, cuts_cohort) {
   surv_data <- surv_data %>%
-    mutate(cohort_lvl = cut(surv_data$cohort,
+    tidyverse::mutate(cohort_lvl = cut(surv_data$cohort,
                             breaks = c(-Inf, cuts_cohort, Inf),
                             include.lowest = TRUE)) # compute to which cohort interval an individual belongs
   surv_data_ls <- split(surv_data, surv_data$cohort_lvl) # split the data following the cohort intervals
@@ -532,7 +534,7 @@ check_derivate_score <- function(par, func, deriv, ...) {
   epsilon_vect <- 10 ^ -seq(1, 6, by = 1)
   p <- length(par)
   l <- length(epsilon_vect)
-  score_df <- data.frame(
+  score_df <- tidyverse::data_frame(
     score_ = c(rep(deriv(par, ...), l), rep(NA, p * l)),
     # score_ = c(rep(deriv(par, exhaust, adj, pen), l), rep(NA, p * l)),
     type = c(rep("functional", p * l), rep("numerical", p * l)),
@@ -549,15 +551,15 @@ check_derivate_score <- function(par, func, deriv, ...) {
     }
     score_df$score_[score_df$epsilon == epsilon_ind & score_df$type == "numerical"] <- score_num
   }
-  functional_df <- score_df %>% filter(type == "functional")
-  numerical_df <- score_df %>% filter(type == "numerical")
+  functional_df <- score_df %>% tidyverse::filter(type == "functional")
+  numerical_df <- score_df %>% tidyverse::filter(type == "numerical")
   mse_df <- functional_df %>%
-    mutate(squared_diff = (functional_df$score_ - numerical_df$score_) ^ 2) %>%
-    group_by(epsilon) %>%
-    summarise(mse = sum(squared_diff)) %>%
-    ungroup() %>%
+    tidyverse::mutate(squared_diff = (functional_df$score_ - numerical_df$score_) ^ 2) %>%
+    tidyverse::group_by(epsilon) %>%
+    tidyverse::summarise(mse = sum(squared_diff)) %>%
+    tidyverse::ungroup() %>%
     as.data.frame() %>%
-    mutate(epsilon = as.numeric(levels(epsilon)))
+    tidyverse::mutate(epsilon = as.numeric(levels(epsilon)))
   list('vect' = score_df, 'mse' = mse_df)
 }
 #' @export
@@ -565,7 +567,7 @@ check_derivate_hessian <- function(par, func, deriv, ...) {
   epsilon_vect <- 10 ^ -seq(1, 6, by = 1)
   p <- length(par)
   l <- length(epsilon_vect)
-  hessian_df <- data.frame(
+  hessian_df <- tidyverse::data_frame(
     hessian_ = c(rep(as.vector(deriv(par, ...)), l),
                  rep(NA, p ^ 2 * l)),
     type = c(rep("functional", p ^ 2 * l),
@@ -582,13 +584,14 @@ check_derivate_hessian <- function(par, func, deriv, ...) {
     }
     hessian_df$hessian_[hessian_df$epsilon == epsilon_ind & hessian_df$type == "numerical"] <- hessian_num
   }
-  functional_df <- hessian_df %>% filter(type == "functional")
-  numerical_df <- hessian_df %>% filter(type == "numerical")
-  mse_df <- functional_df %>% mutate(squared_diff = (functional_df$hessian_ - numerical_df$hessian_) ^ 2) %>%
-    group_by(epsilon) %>%
-    summarise(mse = sum(squared_diff)) %>%
-    ungroup() %>%
+  functional_df <- hessian_df %>% tidyverse::filter(type == "functional")
+  numerical_df <- hessian_df %>% tidyverse::filter(type == "numerical")
+  mse_df <- functional_df %>%
+    tidyverse::mutate(squared_diff = (functional_df$hessian_ - numerical_df$hessian_) ^ 2) %>%
+    tidyverse::group_by(epsilon) %>%
+    tidyverse::summarise(mse = sum(squared_diff)) %>%
+    tidyverse::ungroup() %>%
     as.data.frame() %>%
-    mutate(epsilon = as.numeric(levels(epsilon)))
+    tidyverse::mutate(epsilon = as.numeric(levels(epsilon)))
   list('vect' = hessian_df, 'mse' = mse_df)
 }

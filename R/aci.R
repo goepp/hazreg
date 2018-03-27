@@ -345,21 +345,21 @@ raster <- function(mat, type = 'factor') {
   p <- mat %>%
     melt(varnames = c('cohort', 'age')) %>%
     dplyr::as_data_frame() %>%
-    mutate(value = value) %>%
-    ggplot(., aes(cohort, age))
+    tidyverse::mutate(value = value) %>%
+    tidyverse::ggplot(., aes(cohort, age))
   if (type == 'factor') {
     print(
       p +
-        geom_raster(aes(fill = as.factor(value))) +
-        theme(legend.position = 'none',
+        tidyverse::geom_raster(aes(fill = as.factor(value))) +
+        tidyverse::theme(legend.position = 'none',
               axis.text.x = element_text(angle = 45,
                                          hjust = 1))
       )
   } else if (type == 'numeric') {
     print(
       p +
-        geom_raster(aes(fill = value)) +
-        theme(axis.text.x = element_text(angle = 45,
+        tidyverse::geom_raster(aes(fill = value)) +
+        tidyverse::theme(axis.text.x = element_text(angle = 45,
                                          hjust = 1))
     )
   }
