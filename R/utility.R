@@ -396,7 +396,7 @@ exhaustive_stat_1d <- function(surv_data, cuts_age) {
 #' @export
 exhaustive_stat_2d <- function(surv_data, cuts_age, cuts_cohort) {
   surv_data <- surv_data %>%
-    tidyverse::mutate(cohort_lvl = cut(surv_data$cohort,
+    dplyr::mutate(cohort_lvl = cut(surv_data$cohort,
                             breaks = c(-Inf, cuts_cohort, Inf),
                             include.lowest = TRUE)) # compute to which cohort interval an individual belongs
   surv_data_ls <- split(surv_data, surv_data$cohort_lvl) # split the data following the cohort intervals
