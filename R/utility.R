@@ -296,21 +296,18 @@ raster <- function(mat, type = 'factor') {
     dplyr::mutate(value = value) %>%
     ggplot2::ggplot(., aes(cohort, age))
   if (type == 'factor') {
-    print(
-      p +
+      p <- p +
         ggplot2::geom_raster(aes(fill = as.factor(value))) +
         ggplot2::theme(legend.position = 'none',
                          axis.text.x = element_text(angle = 45,
                                                     hjust = 1))
-    )
   } else if (type == 'numeric') {
-    print(
-      p +
+      p <- p +
         ggplot2::geom_raster(aes(fill = value)) +
         ggplot2::theme(axis.text.x = element_text(angle = 45,
                                                     hjust = 1))
-    )
   }
+  print(p)
   invisible(p)
 }
 #' @export
