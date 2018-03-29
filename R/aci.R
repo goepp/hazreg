@@ -658,4 +658,74 @@ aridge_solver_aci <- function(O, R, pen, sample_size,
   return(list("par" = par_sel, "haz" = haz_sel, "sel" = sel,
               "bic" = bic, "aic" = aic, 'ebic' = ebic))
 }
+#' @export
+aridge_solver_aci_q <- function(O, R, pen, sample_size,
+                              use_band = FALSE, q = 2,
+                              maxiter = 1000,
+                              verbose = FALSE) {
+  pb <- progress_bar$new(
+    format = "  adaptive ridge [:bar] :percent in :elapsed",
+    total = length(pen), clear = FALSE, width = 100)
+  pb$tick(0)
+  sel <- par_sel <- haz_sel <- vector('list', length(pen))
+  bic <- aic <- ebic <- rep(NA, length(pen))
+  epsilon_age <- 1e-5
+  epsilon_cohort <- 1e-5
+  K <- nrow(O)
+  J <- ncol(O)
+  weights_age <- matrix(1, K - 1, J - 1)
+  weights_cohort <- matrix(1, K - 1, J - 1)
+  valve_age <- matrix(1, K - 1, J - 1) %>%
+    "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-", colnames(O)[-J]))) %>%
+    "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-", rownames(O)[-J])))
+  valve_cohort <- matrix(1, K - 1, J - 1) %>%
+    "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-", rownames(O)[-J]))) %>%
+    "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-", colnames(O)[-J])))
+  old_par <- rep(0, J * K)
+  ind_pen <- 1
+  for (iter in 1:maxiter) {
+    if (verbose) cat("iter =", iter, '\n')
+    old_valve_age <- valve_age
+    old_valve_cohort <- valve_cohort
+    par <- ridge_solver_aci(O, R, pen[ind_pen],
+                            weights_age, weights_cohort,
+                            old_par, use_band)$par
+    delta <- matrix(par[-(1:(J + K - 1))], K - 1, J - 1)
+    weights_age[, ] <- 1 / (t(apply(cbind(0, delta), 1, diff)) ^ 2 + epsilon_age ^ 2) ^ (1 - q / 2)
+    weights_cohort[, ] <- 1 / (apply(rbind(0, delta), 2, diff) ^ 2 + epsilon_cohort ^ 2) ^ (1 - q / 2)
+    valve_age[, ] <- (weights_age * t(apply(cbind(0, delta), 1, diff)) ^ 2)
+    valve_cohort[, ] <- (weights_cohort * apply(rbind(0, delta), 2, diff) ^ 2)
+    converged2 <- max(abs(old_valve_age - valve_age),
+                      abs(old_valve_cohort - valve_cohort)) <= 1e-6
+    # old_par <- par
+    if (converged2) {
+      selection <- valve2sel_aci(valve_age, valve_cohort)
+      sel[[ind_pen]] <- selection$fct
+      if (verbose) sel[[ind_pen]] %>% raster('factor')
+      sel_array <- selection$array
+      L <- dim(sel_array)[3]
+      par_sel[[ind_pen]] <- ridge_solver_aci_sel(O, R, sel_array)$par
+      haz_sel[[ind_pen]] <- par2haz_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
+      aic[ind_pen] <- 2 * L + 2 * loglik_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
+      bic[ind_pen] <- log(sample_size) * L +
+        2 * loglik_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
+      ebic[ind_pen] <- bic[ind_pen] +  2 * log(choose(J * K, L))
+      # cat('progress:', ind_pen / length(pen) * 100, '% \n')
+      pb$tick()
+      ind_pen <-  ind_pen + 1
+      # par <- par * 0
+      weights_age[] <- 1
+      weights_cohort[] <- 1
+      valve_age[] <- 1
+      valve_cohort[] <- 1
+    }
+    old_par <- par
+    if (ind_pen == length(pen) + 1) break
+  }
+  if (iter == maxiter) {
+    warning("Warning: aridge did not converge")
+  }
+  return(list("par" = par_sel, "haz" = haz_sel, "sel" = sel,
+              "bic" = bic, "aic" = aic, 'ebic' = ebic))
+}
 
