@@ -589,12 +589,16 @@ ridge_solver_aci <- function(O, R, pen, weights_age = NULL,
 #' @rdname ridge_solver_aci
 #' @export
 #' @family adaptive_ridge
-aridge_solver_aci <- function(O, R, pen_vect, sample_size,
+aridge_solver_aci <- function(O, R, pen, sample_size,
                               use_band = FALSE,
                               maxiter = 1000,
                               verbose = FALSE) {
-  sel <- par_sel <- haz_sel <- vector('list', length(pen_vect))
-  bic <- aic <- ebic <- rep(NA, length(pen_vect))
+  pb <- progress_bar$new(
+    format = "  adaptive ridge [:bar] :percent in :elapsed",
+    total = length(pen), clear = FALSE, width = 100)
+  pb$tick(0)
+  sel <- par_sel <- haz_sel <- vector('list', length(pen))
+  bic <- aic <- ebic <- rep(NA, length(pen))
   epsilon_age <- 1e-5
   epsilon_cohort <- 1e-5
   K <- nrow(O)
@@ -613,9 +617,9 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
     if (verbose) cat("iter =", iter, '\n')
     old_valve_age <- valve_age
     old_valve_cohort <- valve_cohort
-    par <- ridge_solver_aci(O, R, pen = pen_vect[ind_pen],
+    par <- ridge_solver_aci(O, R, pen[ind_pen],
                             weights_age, weights_cohort,
-                            old_par = old_par, use_band = use_band)$par
+                            old_par, use_band)$par
     delta <- matrix(par[-(1:(J + K - 1))], K - 1, J - 1)
     weights_age[, ] <- 1 / (t(apply(cbind(0, delta), 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(rbind(0, delta), 2, diff) ^ 2 + epsilon_cohort ^ 2)
@@ -645,7 +649,8 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
       bic[ind_pen] <- log(sample_size) * L +
         2 * loglik_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
       ebic[ind_pen] <- bic[ind_pen] +  2 * log(choose(J * K, L))
-      cat('progress:', ind_pen / length(pen_vect) * 100, '% \n')
+      # cat('progress:', ind_pen / length(pen) * 100, '% \n')
+      pb$tick()
       ind_pen <-  ind_pen + 1
       # par <- par * 0
       weights_age[] <- 1
@@ -654,7 +659,7 @@ aridge_solver_aci <- function(O, R, pen_vect, sample_size,
       valve_cohort[] <- 1
     }
     old_par <- par
-    if (ind_pen == length(pen_vect) + 1) break
+    if (ind_pen == length(pen) + 1) break
   }
   if (iter == maxiter) {
     warning("Warning: aridge did not converge")

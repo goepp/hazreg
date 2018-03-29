@@ -20,7 +20,8 @@ Imports:
     reshape2,
     mvtnorm,
     scales,
-    bandsolve
+    bandsolve,
+    progress
 RoxygenNote: 6.0.1
 Suggests:
     testthat

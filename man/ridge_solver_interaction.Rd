@@ -6,8 +6,8 @@
 \title{Computes the ridge regularized estimates of the interaction model}
 \usage{
 ridge_solver_interaction(O, R, pen, weights_age = NULL,
-  weights_cohort = NULL, use_band = TRUE, maxiter = 1000,
-  old_par = NULL, verbose = FALSE)
+  weights_cohort = NULL, use_band = TRUE, old_par = NULL,
+  maxiter = 1000, verbose = FALSE)
 
 aridge_solver_interaction(O, R, pen_vect, sample_size, use_band = TRUE,
   maxiter = 1000 * length(pen_vect))
@@ -25,10 +25,10 @@ aridge_solver_interaction(O, R, pen_vect, sample_size, use_band = TRUE,
 
 \item{use_band}{Whether to use faster inversion of the hessian function. \code{TRUE}}
 
-\item{maxiter}{The maximal number of iteractions of the Newton-Raphson procedure.}
-
 \item{old_par}{initial point of the iteration. The default choice is \code{0}
 is recommended}
+
+\item{maxiter}{The maximal number of iteractions of the Newton-Raphson procedure.}
 
 \item{verbose}{Whether to display the progress of the Newton-Raphson procedure.}
 }
