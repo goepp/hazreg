@@ -29,3 +29,8 @@ test_that("hessian_aci_sel consistent with hessian_aci", {
                hessian_aci_sel(par, O, R, sel_array))
 })
 
+test_that("ridge_solver_aci_sel is consistent with ridge_solver_aci", {
+  expect_equal(ridge_solver_aci_sel(O, R, sel_array)$par,
+               ridge_solver_aci(O, R, pen = 0)$par)
+})
+
