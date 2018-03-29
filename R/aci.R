@@ -625,15 +625,6 @@ aridge_solver_aci <- function(O, R, pen, sample_size,
     weights_cohort[, ] <- 1 / (apply(rbind(0, delta), 2, diff) ^ 2 + epsilon_cohort ^ 2)
     valve_age[, ] <- (weights_age * t(apply(cbind(0, delta), 1, diff)) ^ 2)
     valve_cohort[, ] <- (weights_cohort * apply(rbind(0, delta), 2, diff) ^ 2)
-    # persp(cuts_cohort, cuts_age, par2haz_aci(par, J, K)[-1, -1],
-    #       xlab = 'cohort', ylab = 'age', zlab = 'hazard', phi = 30, expand = 0.75,
-    #       theta = -30, shade = 0.25, ltheta = -15, lphi = 120, ticktype = 'detailed')
-    # grid.arrange(levelplot(valve_age), levelplot(valve_cohort))
-    # max(abs(par - old_par))
-    # converged <- sum(is.na(abs(par - old_par) / abs(old_par))) ||
-    #   (max(abs(par - old_par) / abs(old_par)) <= 1e-3)
-    # max(abs(old_valve_age - valve_age),
-    #     abs(old_valve_cohort - valve_cohort)) %>% print()
     converged2 <- max(abs(old_valve_age - valve_age),
                       abs(old_valve_cohort - valve_cohort)) <= 1e-6
     # old_par <- par
