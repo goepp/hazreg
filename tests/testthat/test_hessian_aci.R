@@ -62,8 +62,8 @@ pen <- 1000
 weights_age <- matrix(rnorm((K - 1) * (J - 1)), K - 1, J - 1)
 weights_cohort <- matrix(rnorm((K - 1) * (J - 1)), K - 1, J - 1)
 lim <- J + K - 1
-rot <- hessian_aci(old_par, O, R, pen, weights_age, weights_cohort, use_band = TRUE)
-mat <- hessian_aci(old_par, O, R, pen, weights_age, weights_cohort, use_band = FALSE)
+rot <- hessian_aci(par, O, R, pen, weights_age, weights_cohort, use_band = TRUE)
+mat <- hessian_aci(par, O, R, pen, weights_age, weights_cohort, use_band = FALSE)
 
 test_that("hessian_aci yiels the same result with and without use_band", {
   expect_equal(rot[[1]], mat[1:lim, 1:lim])

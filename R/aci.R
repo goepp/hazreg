@@ -438,9 +438,9 @@ score_aci_sel <- function(par, O, R, sel_array) {
   deriv_beta <- sapply(2:K, function(ind_k) sum( exp(outer(ext_beta[ind_k], mu + ext_alpha, FUN = "+")
                                                      + ext_delta[ind_k, ]) * R[ind_k, ] - O[ind_k, ]))
   temp_array <- (array(replicate(L, exp(eta) * R - O)[-1, -1, ], dim = c(K - 1, J - 1, L)) * sel_array)
-  deriv_delta <- temp_array %>%
-    apply(., MARGIN = 3, sum)
-  c(deriv_mu, deriv_alpha, deriv_beta, deriv_delta)
+  deriv_delta <- apply(temp_array, MARGIN = 3, sum)
+  c(deriv_mu, deriv_alpha, deriv_beta, deriv_delta) %>%
+    setNames(c('mu', rep('alpha', J - 1), rep('beta', K - 1), rep('delta', L)))
 }
 #' @rdname loglik_aci_sel
 #' @export

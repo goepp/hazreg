@@ -15,7 +15,7 @@ R <- matrix(rpois(K * J, 10), K, J)
 par <- rnorm(K * J)
 
 
-test_that("aridge_solver_aci yiels same result with and withou use_band", {
+test_that("aridge_solver_aci yields same result with and without use_band", {
   pen_vect <- 1
   mat <- aridge_solver_aci(O, R, pen_vect, sample_size = 10, use_band = FALSE)
   rot <- aridge_solver_aci(O, R, pen_vect, sample_size = 10, use_band = TRUE)
