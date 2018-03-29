@@ -9,8 +9,8 @@ ridge_solver_interaction(O, R, pen, weights_age = NULL,
   weights_cohort = NULL, use_band = TRUE, old_par = NULL,
   maxiter = 1000, verbose = FALSE)
 
-aridge_solver_interaction(O, R, pen_vect, sample_size, use_band = TRUE,
-  maxiter = 1000 * length(pen_vect))
+aridge_solver_interaction(O, R, pen, sample_size, use_band = TRUE,
+  maxiter = 1000, verbose = FALSE)
 }
 \arguments{
 \item{O}{Observed events as returned by \code{\link{exhaustive_stat_2d}}}

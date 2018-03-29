@@ -184,7 +184,7 @@ hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
   }
 }
 ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FALSE,
-                                     use_band = TRUE) {
+                                         use_band = TRUE) {
   old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (verbose) {
@@ -235,16 +235,16 @@ ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FA
 #' @export
 #' @family ridge
 ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
-                                      weights_cohort = NULL, use_band = TRUE,
-                                      old_par = NULL, maxiter = 1000,
-                                      verbose = FALSE) {
+                                     weights_cohort = NULL, use_band = TRUE,
+                                     old_par = NULL, maxiter = 1000,
+                                     verbose = FALSE) {
   if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
     if (verbose) old_par %>% raster('numeric')
     if (use_band) {
-    par <- old_par - bandsolve(
-      hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
-      score_interaction(old_par, O, R, pen, weights_age, weights_cohort))
+      par <- old_par - bandsolve(
+        hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
+        score_interaction(old_par, O, R, pen, weights_age, weights_cohort))
     } else {
       par <- old_par - Solve(
         hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
@@ -262,11 +262,16 @@ ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
 #' @rdname ridge_solver_interaction
 #' @export
 #' @family adaptive_ridge
-aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
+aridge_solver_interaction <- function(O, R, pen, sample_size,
                                       use_band = TRUE,
-                                      maxiter = 1000 * length(pen_vect)) {
-  sel_ls <- par_sel_ls <- haz_sel_ls <- vector('list', length(pen_vect))
-  bic <- aic <- ebic <- NA * pen_vect
+                                      maxiter = 1000,
+                                      verbose = FALSE) {
+  pb <- progress_bar$new(
+    format = "  adaptive ridge [:bar] :percent in :elapsed",
+    total = length(pen), clear = FALSE, width = 100)
+  pb$tick(0)
+  sel <- par_sel <- haz_sel <- vector('list', length(pen))
+  bic <- aic <- ebic <- NA * pen
   epsilon_age <- 1e-6
   epsilon_cohort <- 1e-6
   K <- nrow(O)
@@ -274,54 +279,61 @@ aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
   weights_age <- matrix(1, K, J - 1)
   weights_cohort <- matrix(1, K - 1, J)
   old_par <- rep(0, K * J)
+  valve_age <- (weights_age * t(apply(eta, 1, diff)) ^ 2) %>%
+    "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-",
+                             colnames(O)[-length(cuts_age) - 1]))) %>%
+    "rownames<-"(rownames(O))
+  valve_cohort <- (weights_cohort * apply(eta, 2, diff) ^ 2) %>%
+    "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-",
+                             rownames(O)[-length(cuts_age) - 1]))) %>%
+    "colnames<-"(colnames(O))
   ind_pen <- 1
   for (iter in 1:maxiter) {
-    par <- ridge_solver_interaction(O, R, pen_vect[ind_pen],
+    old_valve_age <- valve_age
+    old_valve_cohort <- valve_cohort
+    par <- ridge_solver_interaction(O, R, pen[ind_pen],
                                     weights_age, weights_cohort,
-                                    old_par = old_par,
-                                    use_band = use_band)$par
+                                    old_par,
+                                    use_band)$par
     eta <- matrix(par, K, J)
     weights_age[, ]    <- 1 / (t(apply(eta, 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(eta, 2, diff) ^ 2 + epsilon_cohort ^ 2)
-    if (sum(is.na(abs(par - old_par) / abs(old_par))) ||
-        (max(abs(par - old_par) / abs(old_par)) <= sqrt(.Machine$double.eps))) {
-      valve_age <- (weights_age * t(apply(eta, 1, diff)) ^ 2) %>% round(digits = 15) %>%
-        "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-",
-                                 colnames(O)[-length(cuts_age) - 1]))) %>%
-        "rownames<-"(rownames(O))
-      valve_cohort <- (weights_cohort * apply(eta, 2, diff) ^ 2) %>% round(digits = 15) %>%
-        "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-",
-                                 rownames(O)[-length(cuts_age) - 1]))) %>%
-        "colnames<-"(colnames(O))
-      sel_ls[[ind_pen]] <- valve2sel(valve_age, valve_cohort)
-      exhaust_sel <- exhaustive_stat_sel(list("O" = O, "R" = R), sel_ls[[ind_pen]])
-      par_sel_ls[[ind_pen]] <- log(exhaust_sel$O / exhaust_sel$R) %>%
+    valve_age[, ] <- (weights_age * t(apply(cbind(0, delta), 1, diff)) ^ 2)
+    valve_cohort[, ] <- (weights_cohort * apply(rbind(0, delta), 2, diff) ^ 2)
+    converge <- max(abs(old_valve_age - valve_age),
+                      abs(old_valve_cohort - valve_cohort)) <= 1e-6
+    if (converge) {
+      sel[[ind_pen]] <- valve2sel(valve_age, valve_cohort)
+      if (verbose) raster(sel[[ind_pen]], 'factor')
+      exhaust_sel <- exhaustive_stat_sel(list("O" = O, "R" = R), sel[[ind_pen]])
+      par_sel[[ind_pen]] <- log(exhaust_sel$O / exhaust_sel$R) %>%
         '[<-'(which(log(exhaust_sel$O / exhaust_sel$R) == -Inf), -37) %>%
         '[<-'(which(is.nan(log(exhaust_sel$O / exhaust_sel$R))), 0)
-      haz_sel_ls[[ind_pen]] <- par2haz_sel_interaction(par_sel_ls[[ind_pen]], sel_ls[[ind_pen]],
-                                                       J, K, haz.log = FALSE)
-      bic[ind_pen] <- log(sample_size) * length(par_sel_ls[[ind_pen]]) +
-        2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
+      haz_sel[[ind_pen]] <- par2haz_sel_interaction(
+        par_sel[[ind_pen]], sel[[ind_pen]], J, K, haz.log = FALSE)
+      bic[ind_pen] <- log(sample_size) * length(par_sel[[ind_pen]]) +
+        2 * loglik_sel_interaction(par_sel[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
       ebic[ind_pen] <- bic[ind_pen] +
-        2 * log(choose(nrow(O) * ncol(O), length(par_sel_ls[[ind_pen]])))
-      aic[ind_pen] <- 2 * length(par_sel_ls[[ind_pen]]) +
-        2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
+        2 * log(choose(K * J, length(par_sel[[ind_pen]])))
+      aic[ind_pen] <- 2 * length(par_sel[[ind_pen]]) +
+        2 * loglik_sel_interaction(par_sel[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
+      pb$ticks()
       ind_pen <-  ind_pen + 1
     }
     old_par <- par
-    if (ind_pen == length(pen_vect) + 1) break
+    if (ind_pen == length(pen) + 1) break
   }
   if (iter == maxiter) {
     warning("Warning: aridge did not converge")
   }
-  return(list("sel" = sel_ls, "par" = par_sel_ls, "haz" = haz_sel_ls,
+  return(list("sel" = sel, "par" = par_sel, "haz" = haz_sel,
               "bic" = bic, "aic" = aic, 'ebic' = ebic))
 }
-aridge_solver_interaction_q <- function(O, R, pen_vect, sample_size, q = 2,
-                                      use_band = TRUE,
-                                      maxiter = 1000 * length(pen_vect)) {
-  sel_ls <- par_sel_ls <- haz_sel_ls <- vector('list', length(pen_vect))
-  bic <- aic <- ebic <- NA * pen_vect
+aridge_solver_interaction_q <- function(O, R, pen, sample_size, q = 2,
+                                        use_band = TRUE,
+                                        maxiter = 2000) {
+  sel <- par_sel <- haz_sel <- vector('list', length(pen))
+  bic <- aic <- ebic <- NA * pen
   epsilon_age <- 1e-6
   epsilon_cohort <- 1e-6
   K <- nrow(O)
@@ -331,7 +343,7 @@ aridge_solver_interaction_q <- function(O, R, pen_vect, sample_size, q = 2,
   old_par <- rep(0, K * J)
   ind_pen <- 1
   for (iter in 1:maxiter) {
-    par <- ridge_solver_interaction(O, R, pen_vect[ind_pen],
+    par <- ridge_solver_interaction(O, R, pen[ind_pen],
                                     weights_age, weights_cohort,
                                     old_par = old_par,
                                     use_band = use_band)$par
@@ -348,27 +360,27 @@ aridge_solver_interaction_q <- function(O, R, pen_vect, sample_size, q = 2,
         "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-",
                                  rownames(O)[-length(cuts_age) - 1]))) %>%
         "colnames<-"(colnames(O))
-      sel_ls[[ind_pen]] <- valve2sel(valve_age, valve_cohort)
-      exhaust_sel <- exhaustive_stat_sel(list("O" = O, "R" = R), sel_ls[[ind_pen]])
-      par_sel_ls[[ind_pen]] <- log(exhaust_sel$O / exhaust_sel$R) %>%
+      sel[[ind_pen]] <- valve2sel(valve_age, valve_cohort)
+      exhaust_sel <- exhaustive_stat_sel(list("O" = O, "R" = R), sel[[ind_pen]])
+      par_sel[[ind_pen]] <- log(exhaust_sel$O / exhaust_sel$R) %>%
         '[<-'(which(log(exhaust_sel$O / exhaust_sel$R) == -Inf), -37) %>%
         '[<-'(which(is.nan(log(exhaust_sel$O / exhaust_sel$R))), 0)
-      haz_sel_ls[[ind_pen]] <- par2haz_sel_interaction(par_sel_ls[[ind_pen]], sel_ls[[ind_pen]],
+      haz_sel[[ind_pen]] <- par2haz_sel_interaction(par_sel[[ind_pen]], sel[[ind_pen]],
                                                        J, K, haz.log = FALSE)
-      bic[ind_pen] <- log(sample_size) * length(par_sel_ls[[ind_pen]]) +
-        2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
+      bic[ind_pen] <- log(sample_size) * length(par_sel[[ind_pen]]) +
+        2 * loglik_sel_interaction(par_sel[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
       ebic[ind_pen] <- bic[ind_pen] +
-        2 * log(choose(nrow(O) * ncol(O), length(par_sel_ls[[ind_pen]])))
-      aic[ind_pen] <- 2 * length(par_sel_ls[[ind_pen]]) +
-        2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
+        2 * log(choose(nrow(O) * ncol(O), length(par_sel[[ind_pen]])))
+      aic[ind_pen] <- 2 * length(par_sel[[ind_pen]]) +
+        2 * loglik_sel_interaction(par_sel[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
       ind_pen <-  ind_pen + 1
     }
     old_par <- par
-    if (ind_pen == length(pen_vect) + 1) break
+    if (ind_pen == length(pen) + 1) break
   }
   if (iter == maxiter) {
     warning("Warning: aridge did not converge")
   }
-  return(list("sel" = sel_ls, "par" = par_sel_ls, "haz" = haz_sel_ls,
+  return(list("sel" = sel, "par" = par_sel, "haz" = haz_sel,
               "bic" = bic, "aic" = aic, 'ebic' = ebic))
 }

@@ -625,10 +625,9 @@ aridge_solver_aci <- function(O, R, pen, sample_size,
     weights_cohort[, ] <- 1 / (apply(rbind(0, delta), 2, diff) ^ 2 + epsilon_cohort ^ 2)
     valve_age[, ] <- (weights_age * t(apply(cbind(0, delta), 1, diff)) ^ 2)
     valve_cohort[, ] <- (weights_cohort * apply(rbind(0, delta), 2, diff) ^ 2)
-    converged2 <- max(abs(old_valve_age - valve_age),
+    converge <- max(abs(old_valve_age - valve_age),
                       abs(old_valve_cohort - valve_cohort)) <= 1e-6
-    # old_par <- par
-    if (converged2) {
+    if (converge) {
       selection <- valve2sel_aci(valve_age, valve_cohort)
       sel[[ind_pen]] <- selection$fct
       if (verbose) sel[[ind_pen]] %>% raster('factor')
@@ -640,14 +639,8 @@ aridge_solver_aci <- function(O, R, pen, sample_size,
       bic[ind_pen] <- log(sample_size) * L +
         2 * loglik_aci_sel(par_sel[[ind_pen]], O, R, sel_array)
       ebic[ind_pen] <- bic[ind_pen] +  2 * log(choose(J * K, L))
-      # cat('progress:', ind_pen / length(pen) * 100, '% \n')
       pb$tick()
       ind_pen <-  ind_pen + 1
-      # par <- par * 0
-      weights_age[] <- 1
-      weights_cohort[] <- 1
-      valve_age[] <- 1
-      valve_cohort[] <- 1
     }
     old_par <- par
     if (ind_pen == length(pen) + 1) break
