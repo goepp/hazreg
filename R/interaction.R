@@ -67,7 +67,7 @@ loglik_sel_interaction <- function(par, O, R) {
 #' @export
 loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
                                weights_cohort = NULL) {
-  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (any(dim(O) != dim(R)) | (length(par) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
   if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
@@ -101,7 +101,7 @@ loglik_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' @export
 score_interaction <- function(par, O, R, pen, weights_age = NULL,
                               weights_cohort = NULL) {
-  if (any(dim(O) != dim(R)) & (length(pen) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (any(dim(O) != dim(R)) | (length(par) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
   if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
@@ -137,17 +137,13 @@ score_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' @export
 hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
                                 weights_cohort = NULL, use_band = FALSE) {
+  if (any(dim(O) != dim(R)) | (length(par) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
-  if (any(dim(O) != dim(R))) {
-    stop('Error: dimensions of O and R must agree')
-  }
-  if (length(par) != J * K) {
-    stop('Error: dimensions of parameter and exhaustive statistics must agree')
-  }
-  if (is.null(weights_age)) weights_age <- matrix(1, K, J - 1)
+  if (is.null(weights_age))    weights_age <- matrix(1, K, J - 1)
   if (is.null(weights_cohort)) weights_cohort <- matrix(1, K - 1, J)
-  if (nrow(weights_age) != K || ncol(weights_age) != J - 1 || nrow(weights_cohort) != K - 1 ||
+  if (nrow(weights_age) != K | ncol(weights_age) != J - 1 | nrow(weights_cohort) != K - 1 |
       ncol(weights_cohort) != J) {
     stop('Error: dimensions of weights and exhaustive statistics must agree')
   }
@@ -240,14 +236,11 @@ ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FA
 #' @family ridge
 ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
                                       weights_cohort = NULL, use_band = TRUE,
-                                      maxiter = 1000, old_par = NULL,
+                                      old_par = NULL, maxiter = 1000,
                                       verbose = FALSE) {
   if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
   for (iter in 1:maxiter) {
-    if (verbose) {
-      old_par %>% par2grid_interaction(cuts_age, cuts_cohort) %>%
-      make_plot() %>% print()
-    }
+    if (verbose) old_par %>% raster('numeric')
     if (use_band) {
     par <- old_par - bandsolve(
       hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
@@ -258,7 +251,7 @@ ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
         score_interaction(old_par, O, R, pen, weights_age, weights_cohort))
     }
     if (sum(is.na(abs(par - old_par) / abs(old_par)))) break
-    if (max(abs(par - old_par) / abs(old_par)) <= sqrt(1e-8)) break
+    if (max(abs(par - old_par) / abs(old_par)) <= 1e-8) break
     old_par <- par
   }
   if (iter == maxiter) {
@@ -280,19 +273,73 @@ aridge_solver_interaction <- function(O, R, pen_vect, sample_size,
   J <- ncol(O)
   weights_age <- matrix(1, K, J - 1)
   weights_cohort <- matrix(1, K - 1, J)
-  old_par <- rep(0, J * K)
+  old_par <- rep(0, K * J)
   ind_pen <- 1
   for (iter in 1:maxiter) {
-    par <- ridge_solver_interaction(O = O, R = R, pen = pen_vect[ind_pen],
-                                    weights_age = weights_age,
-                                    weights_cohort = weights_cohort,
-                                    maxiter = 1000, old_par = old_par,
+    par <- ridge_solver_interaction(O, R, pen_vect[ind_pen],
+                                    weights_age, weights_cohort,
+                                    old_par = old_par,
                                     use_band = use_band)$par
     eta <- matrix(par, K, J)
     weights_age[, ]    <- 1 / (t(apply(eta, 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(eta, 2, diff) ^ 2 + epsilon_cohort ^ 2)
     if (sum(is.na(abs(par - old_par) / abs(old_par))) ||
         (max(abs(par - old_par) / abs(old_par)) <= sqrt(.Machine$double.eps))) {
+      valve_age <- (weights_age * t(apply(eta, 1, diff)) ^ 2) %>% round(digits = 15) %>%
+        "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-",
+                                 colnames(O)[-length(cuts_age) - 1]))) %>%
+        "rownames<-"(rownames(O))
+      valve_cohort <- (weights_cohort * apply(eta, 2, diff) ^ 2) %>% round(digits = 15) %>%
+        "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-",
+                                 rownames(O)[-length(cuts_age) - 1]))) %>%
+        "colnames<-"(colnames(O))
+      sel_ls[[ind_pen]] <- valve2sel(valve_age, valve_cohort)
+      exhaust_sel <- exhaustive_stat_sel(list("O" = O, "R" = R), sel_ls[[ind_pen]])
+      par_sel_ls[[ind_pen]] <- log(exhaust_sel$O / exhaust_sel$R) %>%
+        '[<-'(which(log(exhaust_sel$O / exhaust_sel$R) == -Inf), -37) %>%
+        '[<-'(which(is.nan(log(exhaust_sel$O / exhaust_sel$R))), 0)
+      haz_sel_ls[[ind_pen]] <- par2haz_sel_interaction(par_sel_ls[[ind_pen]], sel_ls[[ind_pen]],
+                                                       J, K, haz.log = FALSE)
+      bic[ind_pen] <- log(sample_size) * length(par_sel_ls[[ind_pen]]) +
+        2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
+      ebic[ind_pen] <- bic[ind_pen] +
+        2 * log(choose(nrow(O) * ncol(O), length(par_sel_ls[[ind_pen]])))
+      aic[ind_pen] <- 2 * length(par_sel_ls[[ind_pen]]) +
+        2 * loglik_sel_interaction(par_sel_ls[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
+      ind_pen <-  ind_pen + 1
+    }
+    old_par <- par
+    if (ind_pen == length(pen_vect) + 1) break
+  }
+  if (iter == maxiter) {
+    warning("Warning: aridge did not converge")
+  }
+  return(list("sel" = sel_ls, "par" = par_sel_ls, "haz" = haz_sel_ls,
+              "bic" = bic, "aic" = aic, 'ebic' = ebic))
+}
+aridge_solver_interaction_q <- function(O, R, pen_vect, sample_size, q = 2,
+                                      use_band = TRUE,
+                                      maxiter = 1000 * length(pen_vect)) {
+  sel_ls <- par_sel_ls <- haz_sel_ls <- vector('list', length(pen_vect))
+  bic <- aic <- ebic <- NA * pen_vect
+  epsilon_age <- 1e-6
+  epsilon_cohort <- 1e-6
+  K <- nrow(O)
+  J <- ncol(O)
+  weights_age <- matrix(1, K, J - 1)
+  weights_cohort <- matrix(1, K - 1, J)
+  old_par <- rep(0, K * J)
+  ind_pen <- 1
+  for (iter in 1:maxiter) {
+    par <- ridge_solver_interaction(O, R, pen_vect[ind_pen],
+                                    weights_age, weights_cohort,
+                                    old_par = old_par,
+                                    use_band = use_band)$par
+    eta <- matrix(par, K, J)
+    weights_age[, ]    <- 1 / (t(apply(eta, 1, diff)) ^ 2 + epsilon_age ^ 2) ^ (1 - q / 2)
+    weights_cohort[, ] <- 1 / (apply(eta, 2, diff) ^ 2 + epsilon_cohort ^ 2) ^ (1 - q / 2)
+    if (sum(is.na(abs(par - old_par) / abs(old_par))) ||
+        (max(abs(par - old_par) / abs(old_par)) <= 1e-8)) {
       valve_age <- (weights_age * t(apply(eta, 1, diff)) ^ 2) %>% round(digits = 15) %>%
         "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-",
                                  colnames(O)[-length(cuts_age) - 1]))) %>%
