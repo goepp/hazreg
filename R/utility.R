@@ -288,8 +288,15 @@ valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
       'rownames<-'(rownames(valve_age)) %>%
       'colnames<-'(colnames(valve_cohort)))
 }
+#' Color plot a matrix built on top of \code{ggplot2}'s \code{geom_raster}
+#' @param mat matrix to be plotted
+#' @param type whether \code{mat}'s values represent a quantitative (\code{numeric})
+#' or qualitative (\code{factor}) variable
+#' @return The ggplot element is returned as \code{\link{invisible}}. It is also displayed
+#' in the graphical window
 #' @export
 raster <- function(mat, type = 'factor') {
+  type <- match.arg(type)
   p <- mat %>%
     melt(varnames = c('cohort', 'age')) %>%
     dplyr::as_data_frame() %>%
