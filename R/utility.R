@@ -296,7 +296,6 @@ valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
 #' in the graphical window
 #' @export
 raster <- function(mat, type = 'factor') {
-  type <- match.arg(type)
   p <- mat %>%
     melt(varnames = c('cohort', 'age')) %>%
     dplyr::as_data_frame() %>%
