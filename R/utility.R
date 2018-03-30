@@ -295,7 +295,8 @@ valve2sel <- function(valve_age, valve_cohort, epsilon = 1e-8) {
 #' @return The ggplot element is returned as \code{\link{invisible}}. It is also displayed
 #' in the graphical window
 #' @export
-raster <- function(mat, type = 'factor') {
+raster <- function(mat, type = c('factor', 'numeric')) {
+  type <- match.arg(type)
   p <- mat %>%
     melt(varnames = c('cohort', 'age')) %>%
     dplyr::as_data_frame() %>%
