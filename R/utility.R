@@ -623,3 +623,14 @@ check_derivate_hessian <- function(par, func, deriv, ...) {
     dplyr::mutate(epsilon = as.numeric(levels(epsilon)))
   list('vect' = hessian_df, 'mse' = mse_df)
 }
+#' @export
+all_equal_list <- function(list) {
+  if (length(list) == 1) return(TRUE)
+  res <- TRUE
+  for (ind in 2:length(list)) {
+    if (!all(list[[ind - 1]] == list[[ind]])) {
+      res <-  FALSE
+    }
+  }
+  res
+}
