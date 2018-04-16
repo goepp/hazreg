@@ -279,11 +279,11 @@ aridge_solver_interaction <- function(O, R, pen, sample_size,
   weights_age <- matrix(1, K, J - 1)
   weights_cohort <- matrix(1, K - 1, J)
   old_par <- rep(0, K * J)
-  valve_age <- (weights_age * t(apply(eta, 1, diff)) ^ 2) %>%
+  valve_age <- weights_age %>%
     "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-",
                              colnames(O)[-length(cuts_age) - 1]))) %>%
     "rownames<-"(rownames(O))
-  valve_cohort <- (weights_cohort * apply(eta, 2, diff) ^ 2) %>%
+  valve_cohort <- weights_cohort %>%
     "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-",
                              rownames(O)[-length(cuts_age) - 1]))) %>%
     "colnames<-"(colnames(O))
