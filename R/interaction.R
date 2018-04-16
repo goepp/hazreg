@@ -317,7 +317,7 @@ aridge_solver_interaction <- function(O, R, pen, sample_size,
         2 * log(choose(K * J, length(par_sel[[ind_pen]])))
       aic[ind_pen] <- 2 * length(par_sel[[ind_pen]]) +
         2 * loglik_sel_interaction(par_sel[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
-      pb$ticks()
+      pb$tick()
       ind_pen <-  ind_pen + 1
     }
     old_par <- par
