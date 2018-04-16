@@ -298,8 +298,8 @@ aridge_solver_interaction <- function(O, R, pen, sample_size,
     eta <- matrix(par, K, J)
     weights_age[, ]    <- 1 / (t(apply(eta, 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(eta, 2, diff) ^ 2 + epsilon_cohort ^ 2)
-    valve_age[, ] <- (weights_age * t(apply(cbind(0, delta), 1, diff)) ^ 2)
-    valve_cohort[, ] <- (weights_cohort * apply(rbind(0, delta), 2, diff) ^ 2)
+    valve_age[, ] <- (weights_age * t(apply(eta, 1, diff)) ^ 2)
+    valve_cohort[, ] <- (weights_cohort * apply(eta, 2, diff) ^ 2)
     converge <- max(abs(old_valve_age - valve_age),
                       abs(old_valve_cohort - valve_cohort)) <= 1e-6
     if (converge) {
