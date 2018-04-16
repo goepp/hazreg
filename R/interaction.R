@@ -293,8 +293,8 @@ aridge_solver_interaction <- function(O, R, pen, sample_size,
     old_valve_cohort <- valve_cohort
     par <- ridge_solver_interaction(O, R, pen[ind_pen],
                                     weights_age, weights_cohort,
-                                    old_par,
-                                    use_band)$par
+                                    use_band,
+                                    old_par)$par
     eta <- matrix(par, K, J)
     weights_age[, ]    <- 1 / (t(apply(eta, 1, diff)) ^ 2 + epsilon_age ^ 2)
     weights_cohort[, ] <- 1 / (apply(eta, 2, diff) ^ 2 + epsilon_cohort ^ 2)
