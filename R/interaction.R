@@ -137,7 +137,7 @@ score_interaction <- function(par, O, R, pen, weights_age = NULL,
 #' @export
 hessian_interaction <- function(par, O, R, pen, weights_age = NULL,
                                 weights_cohort = NULL, use_band = FALSE) {
-  if (any(dim(O) != dim(R)) | (length(par) != length(R))) stop('Error: dimensions of O, R, and pen must agree')
+  if (any(dim(O) != dim(R)) | (length(par) != length(R))) stop('Error: dimensions of O, R, and par must agree')
   if (O < 0 || R < 0 || pen < 0) stop('Error: O, R, and pen must have non-negative values')
   K <- nrow(O)
   J <- ncol(O)
@@ -218,6 +218,7 @@ ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FA
 #' @param weights_age weights of the age differences in the log-hazard. See ADD REFERENCE SHEET
 #' @param weights_cohort weights of the cohort differences in the log-hazard. See ADD REFERENCE SHEET
 #' @param old_par initial point of the iteration. The default choice is \code{0}
+#' @param tol Absolute error tolerance used as stopping criteria of the Newton-Raphson minimization.
 #' is recommended
 #' @return The vector estimate of the ridge regularized interaction model.
 #' @examples
@@ -236,18 +237,17 @@ ridge_solver_interaction_old <- function(O, R, pen, maxiter = 1000, verbose = FA
 #' @family ridge
 ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
                                      weights_cohort = NULL, use_band = TRUE,
-                                     old_par = NULL, maxiter = 1000,
-                                     verbose = FALSE) {
-  if (is.null(old_par)) old_par <- rep(0, ncol(O) * nrow(O))
+                                     old_par = rep(0, ncol(O) * nrow(O)), maxiter = 1000,
+                                     verbose = FALSE, tol = 1e-8) {
   for (iter in 1:maxiter) {
     if (verbose) old_par %>% raster('numeric')
     if (use_band) {
       par <- old_par - bandsolve(
-        hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
+        hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = TRUE),
         score_interaction(old_par, O, R, pen, weights_age, weights_cohort))
     } else {
       par <- old_par - Solve(
-        hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = use_band),
+        hessian_interaction(old_par, O, R, pen, weights_age, weights_cohort, use_band = FALSE),
         score_interaction(old_par, O, R, pen, weights_age, weights_cohort))
     }
     if (sum(is.na(abs(par - old_par) / abs(old_par)))) break

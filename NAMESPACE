@@ -2,6 +2,7 @@
 
 export(aci_cv_aridge)
 export(aci_cv_ridge)
+export(all_equal_list)
 export(aridge_solver_aci)
 export(aridge_solver_aci_q)
 export(aridge_solver_interaction)

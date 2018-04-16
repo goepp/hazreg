@@ -4,7 +4,7 @@
 \alias{raster}
 \title{Color plot a matrix built on top of \code{ggplot2}'s \code{geom_raster}}
 \usage{
-raster(mat, type = "factor")
+raster(mat, type = c("factor", "numeric"))
 }
 \arguments{
 \item{mat}{matrix to be plotted}

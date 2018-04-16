@@ -6,8 +6,8 @@
 \title{Computes the ridge regularized estimates of the interaction model}
 \usage{
 ridge_solver_interaction(O, R, pen, weights_age = NULL,
-  weights_cohort = NULL, use_band = TRUE, old_par = NULL,
-  maxiter = 1000, verbose = FALSE)
+  weights_cohort = NULL, use_band = TRUE, old_par = rep(0, ncol(O) *
+  nrow(O)), maxiter = 1000, verbose = FALSE, tol = 1e-08)
 
 aridge_solver_interaction(O, R, pen, sample_size, use_band = TRUE,
   maxiter = 1000, verbose = FALSE)
@@ -25,12 +25,14 @@ aridge_solver_interaction(O, R, pen, sample_size, use_band = TRUE,
 
 \item{use_band}{Whether to use faster inversion of the hessian function. \code{TRUE}}
 
-\item{old_par}{initial point of the iteration. The default choice is \code{0}
-is recommended}
+\item{old_par}{initial point of the iteration. The default choice is \code{0}}
 
 \item{maxiter}{The maximal number of iteractions of the Newton-Raphson procedure.}
 
 \item{verbose}{Whether to display the progress of the Newton-Raphson procedure.}
+
+\item{tol}{Absolute error tolerance used as stopping criteria of the Newton-Raphson minimization.
+is recommended}
 }
 \value{
 The vector estimate of the ridge regularized interaction model.
