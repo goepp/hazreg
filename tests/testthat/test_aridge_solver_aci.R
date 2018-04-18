@@ -6,6 +6,7 @@ library(reshape2)
 library(limSolve)
 library(igraph)
 library(bandsolve)
+library(progress)
 
 set.seed(0)
 K <- 3

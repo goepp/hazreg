@@ -517,14 +517,14 @@ mle_sel_old <- function(O, R, sel) {
   list("par" = par_res, "haz" = haz_res)
 }
 #' @export
-aci_cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
-  score_mat <- matrix(NA, nfold, length(pen_vect))
+interaction_cv_aridge <- function(pen, nfold, data, cuts_age, cuts_cohort) {
+  score_mat <- matrix(NA, nfold, length(pen))
   for (ind in 1:nfold) {
     sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
                        floor(nrow(data)/nfold) * ind)
     sample_train <- setdiff(1:nrow(data), sample_test)
     exhaust_train <- exhaustive_stat(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
-    train <- aridge_solver_interaction(exhaust_train$O, exhaust_train$R, pen_vect = pen_vect, sample_size = length(sample_train))
+    train <- aridge_solver_interaction(exhaust_train$O, exhaust_train$R, pen = pen, sample_size = length(sample_train))
     train_par_ls <- lapply(train$par, function(par) '[<-'(par, which(is.nan(par)), 0))
     train_sel_ls <- train$sel
     exhaust_test_ls <-  lapply(train_sel_ls, function(sel) exhaustive_stat_sel(
@@ -539,15 +539,15 @@ aci_cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   colSums(score_mat)
 }
 #' @export
-aci_cv_ridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
-  score_mat <- matrix(NA, nfold, length(pen_vect))
+interaction_cv_ridge <- function(pen, nfold, data, cuts_age, cuts_cohort) {
+  score_mat <- matrix(NA, nfold, length(pen))
   for (ind in 1:nfold) {
-    sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
-                       floor(nrow(data)/nfold) * ind)
+    sample_test <- seq(floor(nrow(data) / nfold) * (ind - 1) + 1,
+                       floor(nrow(data) / nfold) * ind)
     sample_train <- setdiff(1:nrow(data), sample_test)
     exhaust_train <- exhaustive_stat(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
     exhaust_test <- exhaustive_stat(dplyr::slice(data, sample_test), cuts_age, cuts_cohort)
-    train_par_ls <- lapply(pen_vect, ridge_solver, O = exhaust_train$O, R = exhaust_train$R) %>%
+    train_par_ls <- lapply(pen, ridge_solver_interaction, O = exhaust_train$O, R = exhaust_train$R) %>%
       lapply(., function(element) element$par)
     score_mat[ind, ] <- lapply(train_par_ls, loglik, exhaust_test$O, exhaust_test$R, pen = 0) %>%
       unlist()
