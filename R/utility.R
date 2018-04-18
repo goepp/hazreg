@@ -517,47 +517,6 @@ mle_sel_old <- function(O, R, sel) {
   list("par" = par_res, "haz" = haz_res)
 }
 #' @export
-interaction_cv_aridge <- function(pen, nfold, data, cuts_age, cuts_cohort) {
-  score_mat <- matrix(NA, nfold, length(pen))
-  for (ind in 1:nfold) {
-    sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
-                       floor(nrow(data)/nfold) * ind)
-    sample_train <- setdiff(1:nrow(data), sample_test)
-    exhaust_train <- exhaustive_stat(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
-    train <- aridge_solver_interaction(exhaust_train$O, exhaust_train$R, pen = pen, sample_size = length(sample_train))
-    train_par_ls <- lapply(train$par, function(par) '[<-'(par, which(is.nan(par)), 0))
-    train_sel_ls <- train$sel
-    exhaust_test_ls <-  lapply(train_sel_ls, function(sel) exhaustive_stat_sel(
-      exhaustive_stat(dplyr::slice(data, sample_test),  cuts_age, cuts_cohort), sel))
-    score_mat[ind, ] <- mapply(
-      FUN = function(par, exhaust_test) loglik_sel_interaction(par, exhaust_test$O, exhaust_test$R),
-      par = train_par_ls, exhaust_test = exhaust_test_ls)
-    if (any(is.null(score_mat[ind, ]))) {
-      stop('Error in call to aridge_solver_interaction')
-    }
-  }
-  colSums(score_mat)
-}
-#' @export
-interaction_cv_ridge <- function(pen, nfold, data, cuts_age, cuts_cohort) {
-  score_mat <- matrix(NA, nfold, length(pen))
-  for (ind in 1:nfold) {
-    sample_test <- seq(floor(nrow(data) / nfold) * (ind - 1) + 1,
-                       floor(nrow(data) / nfold) * ind)
-    sample_train <- setdiff(1:nrow(data), sample_test)
-    exhaust_train <- exhaustive_stat(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
-    exhaust_test <- exhaustive_stat(dplyr::slice(data, sample_test), cuts_age, cuts_cohort)
-    train_par_ls <- lapply(pen, ridge_solver_interaction, O = exhaust_train$O, R = exhaust_train$R) %>%
-      lapply(., function(element) element$par)
-    score_mat[ind, ] <- lapply(train_par_ls, loglik, exhaust_test$O, exhaust_test$R, pen = 0) %>%
-      unlist()
-    if (any(is.null(score_mat[ind, ]))) {
-      stop('Error in call to ridge_solver_interaction')
-    }
-  }
-  colSums(score_mat)
-}
-#' @export
 check_derivate_score <- function(par, func, deriv, ...) {
   epsilon_vect <- 10 ^ -seq(1, 6, by = 1)
   p <- length(par)

@@ -265,11 +265,14 @@ ridge_solver_interaction <- function(O, R, pen, weights_age = NULL,
 aridge_solver_interaction <- function(O, R, pen, sample_size,
                                       use_band = TRUE,
                                       maxiter = 1000,
-                                      verbose = FALSE) {
-  pb <- progress_bar$new(
-    format = "  adaptive ridge [:bar] :percent in :elapsed",
-    total = length(pen), clear = FALSE, width = 100)
-  pb$tick(0)
+                                      verbose = FALSE,
+                                      progress = TRUE) {
+  if (progress) {
+    pb <- progress_bar$new(
+      format = "  adaptive ridge [:bar] :percent in :elapsed",
+      total = length(pen), clear = FALSE, width = 100)
+    pb$tick(0)
+  }
   sel <- par_sel <- haz_sel <- vector('list', length(pen))
   bic <- aic <- ebic <- NA * pen
   epsilon_age <- 1e-6
@@ -317,7 +320,7 @@ aridge_solver_interaction <- function(O, R, pen, sample_size,
         2 * log(choose(K * J, length(par_sel[[ind_pen]])))
       aic[ind_pen] <- 2 * length(par_sel[[ind_pen]]) +
         2 * loglik_sel_interaction(par_sel[[ind_pen]], exhaust_sel$O, exhaust_sel$R)
-      pb$tick()
+      if (progress) pb$tick()
       ind_pen <-  ind_pen + 1
     }
     old_par <- par
@@ -384,3 +387,77 @@ aridge_solver_interaction_q <- function(O, R, pen, sample_size, q = 2,
   return(list("sel" = sel, "par" = par_sel, "haz" = haz_sel,
               "bic" = bic, "aic" = aic, 'ebic' = ebic))
 }
+#' @export
+cv_aridge_interaction <- function(data, cuts_age, cuts_cohort,
+                                  pen = 10 ^ seq(-4, 4, length = 50), nfold = 10) {
+  score_matrix <- matrix(NA, nfold, length(pen))
+  for (ind in 1:nfold) {
+    sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
+                       floor(nrow(data)/nfold) * ind)
+    sample_train <- setdiff(1:nrow(data), sample_test)
+    exhaust_train <- exhaustive_stat(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
+    train <- aridge_solver_interaction(exhaust_train$O, exhaust_train$R, pen = pen,
+                                       sample_size = length(sample_train))
+    train_par_ls <- lapply(train$par, function(par) '[<-'(par, which(is.nan(par)), 0))
+    train_sel_ls <- train$sel
+    exhaust_test_ls <-  lapply(train_sel_ls, function(sel) exhaustive_stat_sel(
+      exhaustive_stat(dplyr::slice(data, sample_test),  cuts_age, cuts_cohort), sel))
+    score_matrix[ind, ] <- mapply(
+      FUN = function(par, exhaust_test) loglik_sel_interaction(par, exhaust_test$O, exhaust_test$R),
+      par = train_par_ls, exhaust_test = exhaust_test_ls)
+    if (any(is.null(score_matrix[ind, ]))) {
+      stop('Error in call to aridge_solver_interaction')
+    }
+  }
+  score <- colSums(score_matrix)
+  exhaust <- exhaustive_stat_2d(data, cuts_age, cuts_cohort)
+  fit <- aridge_solver_interaction(exhaust$O, exhaust$R, pen[which.min(score)], nrow(data))
+  list('haz' = fit$haz[[1]],
+       'par' = fit$par[[1]],
+       'sel' = fit$sel[[1]],
+       'score' = colSums(score_matrix))
+}
+#' @export
+cv_ridge_interaction <- function(data, cuts_age, cuts_cohort,
+                                 pen = 10 ^ seq(-4, 4, length = 50), nfold = 10) {
+  score_matrix <- matrix(NA, nfold, length(pen))
+  for (ind in 1:nfold) {
+    sample_test <- seq(floor(nrow(data) / nfold) * (ind - 1) + 1,
+                       floor(nrow(data) / nfold) * ind)
+    sample_train <- setdiff(1:nrow(data), sample_test)
+    exhaust_train <- exhaustive_stat_2d(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
+    exhaust_test <- exhaustive_stat_2d(dplyr::slice(data, sample_test), cuts_age, cuts_cohort)
+    train_par_ls <- lapply(pen, ridge_solver_interaction, O = exhaust_train$O, R = exhaust_train$R) %>%
+      lapply(., function(element) element$par)
+    score_matrix[ind, ] <- lapply(train_par_ls, loglik_interaction, exhaust_test$O, exhaust_test$R, pen = 0) %>%
+      unlist()
+    if (any(is.null(score_matrix[ind, ]))) {
+      stop('Error in call to ridge_solver_interaction')
+    }
+  }
+  score <- colSums(score_matrix)
+  exhaust <- exhaustive_stat_2d(data, cuts_age, cuts_cohort)
+  par <- ridge_solver_interaction(exhaust$O, exhaust$R, pen[which.min(score)])$par
+  haz <- par2haz_interaction(par, length(cuts_age) + 1, length(cuts_cohort) + 1)
+  list('haz' = haz,
+       'par' = par,
+       'score' = colSums(score_matrix))
+}
+#' @export
+bootstrap <- function(data, cuts_age, cuts_cohort, times = 100,
+                      pen = 10 ^ seq(-3, 4, length = 50), crit = c("ebic")) {
+  # fit <- vector("list", length = times)
+  model_wrapper <- function(index, data, cuts_age, cuts_cohort) {
+    sample <- data[sample(1:nrow(data), replace = TRUE), ]
+    exhaust <- exhaustive_stat_2d(sample, cuts_age, cuts_cohort)
+    fit <- aridge_solver_interaction(exhaust$O, exhaust$R, pen, nrow(sample), progress = FALSE)
+    fit$haz[[which.min(fit$ebic)]]
+  }
+  fit <- mclapply(1:times, model_wrapper, data, cuts_age, cuts_cohort)
+  list('col' = fit,
+       'median' = apply(simplify2array(fit), 1:2, median),
+       'mean' = apply(simplify2array(fit), 1:2, mean),
+       'sd' = apply(simplify2array(fit), 1:2, sd))
+}
+
+

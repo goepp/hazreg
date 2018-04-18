@@ -10,7 +10,7 @@ ridge_solver_interaction(O, R, pen, weights_age = NULL,
   nrow(O)), maxiter = 1000, verbose = FALSE, tol = 1e-08)
 
 aridge_solver_interaction(O, R, pen, sample_size, use_band = TRUE,
-  maxiter = 1000, verbose = FALSE)
+  maxiter = 1000, verbose = FALSE, progress = TRUE)
 }
 \arguments{
 \item{O}{Observed events as returned by \code{\link{exhaustive_stat_2d}}}
