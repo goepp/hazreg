@@ -445,13 +445,14 @@ cv_ridge_interaction <- function(data, cuts_age, cuts_cohort,
 }
 #' @export
 bootstrap <- function(data, cuts_age, cuts_cohort, times = 100,
-                      pen = 10 ^ seq(-3, 4, length = 50), crit = c("ebic")) {
+                      pen = 10 ^ seq(-3, 4, length = 50),
+                      crit = c("ebic")) {
   # fit <- vector("list", length = times)
   model_wrapper <- function(index, data, cuts_age, cuts_cohort) {
     sample <- data[sample(1:nrow(data), replace = TRUE), ]
     exhaust <- exhaustive_stat_2d(sample, cuts_age, cuts_cohort)
-    fit <- aridge_solver_interaction(exhaust$O, exhaust$R, pen, nrow(sample), progress = FALSE)
-    fit$haz[[which.min(fit$ebic)]]
+    fit <- aridge_solver_interaction(exhaust$O, exhaust$R, pen, nrow(sample), progress = TRUE)
+    fit$haz[[which.min(fit[[crit]])]]
   }
   fit <- mclapply(1:times, model_wrapper, data, cuts_age, cuts_cohort)
   list('col' = fit,
