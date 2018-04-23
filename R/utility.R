@@ -454,12 +454,13 @@ cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
     sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
                        floor(nrow(data)/nfold) * ind)
     sample_train <- setdiff(1:nrow(data), sample_test)
-    exhaust_train <- exhaustive_stat(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
-    train <- aridge_solver_interaction(exhaust_train$O, exhaust_train$R, pen_vect = pen_vect, sample_size = length(sample_train))
+    exhaust_train <- exhaustive_stat_2d(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
+    train <- aridge_solver_interaction(exhaust_train$O, exhaust_train$R, pen = pen_vect,
+                                       sample_size = length(sample_train))
     train_par_ls <- lapply(train$par, function(par) '[<-'(par, which(is.nan(par)), 0))
     train_sel_ls <- train$sel
     exhaust_test_ls <-  lapply(train_sel_ls, function(sel) exhaustive_stat_sel(
-      exhaustive_stat(dplyr::slice(data, sample_test),  cuts_age, cuts_cohort), sel))
+      exhaustive_stat_2d(dplyr::slice(data, sample_test),  cuts_age, cuts_cohort), sel))
     score_mat[ind, ] <- mapply(FUN = function(par, exhaust_test) loglik_sel_interaction(par, exhaust_test$O,
                                                                                         exhaust_test$R),
                                par = train_par_ls, exhaust_test = exhaust_test_ls)
@@ -476,8 +477,8 @@ cv_ridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
     sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
                        floor(nrow(data)/nfold) * ind)
     sample_train <- setdiff(1:nrow(data), sample_test)
-    exhaust_train <- exhaustive_stat(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
-    exhaust_test <- exhaustive_stat(dplyr::slice(data, sample_test), cuts_age, cuts_cohort)
+    exhaust_train <- exhaustive_stat_2d(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
+    exhaust_test <- exhaustive_stat_2d(dplyr::slice(data, sample_test), cuts_age, cuts_cohort)
     train_par_ls <- lapply(pen_vect, ridge_solver_interaction, O = exhaust_train$O, R = exhaust_train$R) %>%
       lapply(., function(element) element$par)
     score_mat[ind, ] <- lapply(train_par_ls, loglik_interaction, exhaust_test$O,
@@ -594,4 +595,11 @@ all_equal_list <- function(list) {
     }
   }
   res
+}
+#' @export
+ac2pc <- function(ac) {
+rot_ac <- ac[, seq(ncol(ac), 1)]
+diag_ls <- lapply((-ncol(rot_ac)):(nrow(rot_ac)), extract_diag, mat = rot_ac)
+filtered_diag_ls <- diag_ls[lapply(diag_ls, length) == min(dim(rot_ac))]
+sapply(filtered_diag_ls, rbind)
 }
