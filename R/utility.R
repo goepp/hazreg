@@ -383,21 +383,29 @@ sel2segment <- function(sel, cuts_age, cuts_cohort) {
 #' surv_data
 #' @export
 exhaustive_stat_1d <- function(surv_data, cuts_age) {
-  ext_cuts_age <- c(0, cuts_age)
-  temp1 <- model.matrix(~0 + cut(surv_data$age,
-                                 breaks = c(ext_cuts_age, Inf),
-                                 labels = 1:length(ext_cuts_age),
-                                 include.lowest = TRUE))
-  attr(temp1, "contrasts") <- NULL
-  attr(temp1, "assign") <- NULL
-  temp2 <- t(1 - apply(temp1, 1, cummax)) + temp1
-  temp3 <- t(apply(apply(cbind(t(matrix(rep(ext_cuts_age, length(surv_data$age)),
-                                        ncol = length(surv_data$age))),
-                               surv_data$age), 1, sort), 2, diff))
-  O <- temp1 * matrix(rep(surv_data$delta, length(ext_cuts_age)), ncol = length(ext_cuts_age))
-  R <- temp3 * temp2
-  colnames(O) <- colnames(R) <- levels(cut(0, breaks = c(ext_cuts_age, Inf), right = FALSE, dig.lab = 3))
-  list(O = O %>% colSums(), R = R %>% colSums())
+  if (nrow(surv_data) == 0) {
+    exhaustive_stat_1d(
+      data_frame(age = (cuts_age[1] + cuts_age[2]) / 2,
+                 delta = 1),
+      cuts_age) %>%
+      lapply(., function(elem) elem * 0)
+  } else {
+    ext_cuts_age <- c(0, cuts_age)
+    temp1 <- model.matrix(~0 + cut(surv_data$age,
+                                   breaks = c(ext_cuts_age, Inf),
+                                   labels = 1:length(ext_cuts_age),
+                                   include.lowest = TRUE))
+    attr(temp1, "contrasts") <- NULL
+    attr(temp1, "assign") <- NULL
+    temp2 <- t(1 - apply(temp1, 1, cummax)) + temp1
+    temp3 <- t(apply(apply(cbind(t(matrix(rep(ext_cuts_age, length(surv_data$age)),
+                                          ncol = length(surv_data$age))),
+                                 surv_data$age), 1, sort), 2, diff))
+    O <- temp1 * matrix(rep(surv_data$delta, length(ext_cuts_age)), ncol = length(ext_cuts_age))
+    R <- temp3 * temp2
+    colnames(O) <- colnames(R) <- levels(cut(0, breaks = c(ext_cuts_age, Inf), right = FALSE, dig.lab = 3))
+    list(O = O %>% colSums(), R = R %>% colSums())
+  }
 }
 #' Compute exhaustive statistics for the piecewise constant hazard model
 #'
