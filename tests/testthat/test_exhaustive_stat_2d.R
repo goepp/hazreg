@@ -24,8 +24,7 @@ censoring <- runif(sample_size, 75, 100)
 surv_data <- map_surv(ground, sample_size = sample_size,
                       dob_dist = "unif", dob_dist_par = c(1900, 2000)) %>%
   mutate(delta = as.numeric(censoring >= age)) %>%
-  mutate(age = pmin(age, censoring)) %>%
-  mutate(sample_size = sample_size, rep = ind_rep)
+  mutate(age = pmin(age, censoring))
 
 ggplot(surv_data, aes(cohort, age)) +
   geom_point() +
@@ -34,10 +33,8 @@ ggplot(surv_data, aes(cohort, age)) +
   ylim(0, 100) +
   xlim(1900, 2000)
 
-
-
 test_that("exhaustive_stat work with empty cohort intervals", {
-  expect_output(exhaustive_stat_2d(surv_data, cuts_age, cuts_cohort))
+  expect_error(exhaustive_stat_2d(surv_data, cuts_age, cuts_cohort), NA)
 })
 
 exhaust <- exhaustive_stat_2d(surv_data, cuts_age, cuts_cohort)

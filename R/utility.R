@@ -1,12 +1,13 @@
 #' hazreg: A package for computing regularized hazard in survival analysis models
 #'
-#' The foo package provides functions for the estimation of hazard
+#' The hazreg package provides functions for the estimation of hazard
 #' of different models in time-to-event data.
 #'
 #' @section Utility functions
 #' @section The Age-cohort model
 #' @section The Age-cohort interaction model
 #' @section The interaction model
+#' @section Simulation toolbox
 #' @import tidyverse
 #'
 #' @docType package
@@ -459,8 +460,8 @@ solver_mle_sel <- function(O, R, sel) {
 cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   score_mat <- matrix(NA, nfold, length(pen_vect))
   for (ind in 1:nfold) {
-    sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
-                       floor(nrow(data)/nfold) * ind)
+    sample_test <- seq(floor(nrow(data) / nfold) * (ind - 1) + 1,
+                       floor(nrow(data) / nfold) * ind)
     sample_train <- setdiff(1:nrow(data), sample_test)
     exhaust_train <- exhaustive_stat_2d(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
     train <- aridge_solver_interaction(exhaust_train$O, exhaust_train$R, pen = pen_vect,
@@ -482,8 +483,8 @@ cv_aridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
 cv_ridge <- function(pen_vect, nfold, data, cuts_age, cuts_cohort) {
   score_mat <- matrix(NA, nfold, length(pen_vect))
   for (ind in 1:nfold) {
-    sample_test <- seq(floor(nrow(data)/nfold) * (ind - 1) + 1,
-                       floor(nrow(data)/nfold) * ind)
+    sample_test <- seq(floor(nrow(data) / nfold) * (ind - 1) + 1,
+                       floor(nrow(data) / nfold) * ind)
     sample_train <- setdiff(1:nrow(data), sample_test)
     exhaust_train <- exhaustive_stat_2d(dplyr::slice(data, sample_train), cuts_age, cuts_cohort)
     exhaust_test <- exhaustive_stat_2d(dplyr::slice(data, sample_test), cuts_age, cuts_cohort)

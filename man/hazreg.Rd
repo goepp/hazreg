@@ -6,7 +6,7 @@
 \alias{hazreg-package}
 \title{hazreg: A package for computing regularized hazard in survival analysis models}
 \description{
-The foo package provides functions for the estimation of hazard
+The hazreg package provides functions for the estimation of hazard
 of different models in time-to-event data.
 }
 \section{Utility functions}{
@@ -22,6 +22,10 @@ NA
 }
 
 \section{The interaction model}{
+NA
+}
+
+\section{Simulation toolbox}{
 NA
 }
 
