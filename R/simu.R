@@ -7,6 +7,7 @@
 #' available.
 #' @return sample_df simulated events
 #' @return exhaust_ls list of exhaustive statistics computed for each simulation
+#' @export
 design_simu <- function(sample_size_vect, n_rep, censoring_lim = c(75, 100)) {
   design <- expand.grid('sample_size' = sample_size_vect, 'rep' = 1:n_rep)
   sample_df <- data_frame()
@@ -38,7 +39,7 @@ design_simu <- function(sample_size_vect, n_rep, censoring_lim = c(75, 100)) {
 #' the form of data frames. \code{nlevel} gives the number of selected areas,
 #' \code{mse} gives the mean square error, \code{sel} gives the estimated regions,
 #' and \©ode{haz} gives the estimated hazard.
-#'
+#' @export
 criterion_simu_wrapper <- function(ind_wrapper, design, exhaust_ls, pen_vect, scaled_ground_haz) {
   sample_size <- design$sample_size[ind_wrapper]; ind_rep <- design$rep[ind_wrapper]
   exhaust <- exhaust_ls[[ind_wrapper]]
@@ -79,6 +80,7 @@ criterion_simu_wrapper <- function(ind_wrapper, design, exhaust_ls, pen_vect, sc
 #'
 #' @family simu_wrapper
 #' @param nfold constant \code{K} in K-fold cross-validation
+#' @export
 cv_simu_wrapper <- function(ind_wrapper, design, sample_df, pen_vect, scaled_ground_haz, nfold) {
   ind_sample_size <- design$sample_size[ind_wrapper]
   ind_rep <- design$rep[ind_wrapper]
@@ -111,6 +113,7 @@ cv_simu_wrapper <- function(ind_wrapper, design, sample_df, pen_vect, scaled_gro
 #' Run the interaction model with ridge regularization on simulated data
 #'
 #' @family simu_wrapper
+#' @export
 ridge_simu_wrapper <- function(ind_wrapper, design, sample_df, pen_vect, scaled_ground_haz) {
   ind_sample_size <- design$sample_size[ind_wrapper]
   ind_rep <- design$rep[ind_wrapper]

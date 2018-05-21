@@ -8,7 +8,7 @@ criterion_simu_wrapper(ind_wrapper, design, exhaust_ls, pen_vect,
   scaled_ground_haz)
 }
 \arguments{
-\item{ind_wrapper}{index of the simulation design}
+\item{ind_wrapper}{index of the simulation design. Between 1 and \code{nrow(design)}.}
 
 \item{design}{simulation design matrix}
 
