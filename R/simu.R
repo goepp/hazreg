@@ -132,3 +132,21 @@ ridge_simu_wrapper <- function(ind_wrapper, design, sample_df, pen_vect, scaled_
     mutate(criterion = rep('cv_ridge', each = K * J), 'ind_rep' = ind_rep, 'sample_size' = ind_sample_size, variable = 'haz')
   return(list(mse = mse_df, haz = haz_df))
 }
+#' Run the age-cohort model with ridge regularization on simulated data
+#'
+#' @family simu_wrapper
+#' @export
+ac_simu_wrapper <- function(ind_wrapper, design, exhaust_ls, scaled_ground_haz) {
+  ind_sample_size <- design$sample_size[ind_wrapper]
+  ind_rep <- design$rep[ind_wrapper]
+  haz <- solver_ac(exhaust_ls[[ind_wrapper]]$O, exhaust_ls[[ind_wrapper]]$R, maxiter = 1000)$par %>%
+    par2haz_ac(ncol(exhaust_ls[[ind_wrapper]]$O), nrow(exhaust_ls[[ind_wrapper]]$O))
+  haz_df <- haz2grid_ac(haz, cuts_age, cuts_cohort) %>%
+    as_tibble() %>%
+    mutate(criterion = rep('ac', each = K * J), 'ind_rep' = ind_rep,
+           'sample_size' = ind_sample_size, variable = 'haz')
+  mse_df <- dplyr::data_frame('ind_rep' = ind_rep, 'sample_size' = ind_sample_size,
+                              "variable" = 'mse',
+                              'ac' = sum((haz - scaled_ground_haz) ^ 2) / (J * K))
+  return(list(mse = mse_df, haz = haz_df))
+}

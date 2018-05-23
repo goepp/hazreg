@@ -14,7 +14,8 @@ cv_simu_wrapper(ind_wrapper, design, sample_df, pen_vect, scaled_ground_haz,
 Run the interaction model with cross-validation on simulated data
 }
 \seealso{
-Other simu_wrapper: \code{\link{criterion_simu_wrapper}},
+Other simu_wrapper: \code{\link{ac_simu_wrapper}},
+  \code{\link{criterion_simu_wrapper}},
   \code{\link{design_simu}},
   \code{\link{ridge_simu_wrapper}}
 }

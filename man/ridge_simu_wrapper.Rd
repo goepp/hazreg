@@ -10,6 +10,7 @@ ridge_simu_wrapper(ind_wrapper, design, sample_df, pen_vect, scaled_ground_haz)
 Run the interaction model with ridge regularization on simulated data
 }
 \seealso{
-Other simu_wrapper: \code{\link{criterion_simu_wrapper}},
+Other simu_wrapper: \code{\link{ac_simu_wrapper}},
+  \code{\link{criterion_simu_wrapper}},
   \code{\link{cv_simu_wrapper}}, \code{\link{design_simu}}
 }

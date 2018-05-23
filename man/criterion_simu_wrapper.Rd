@@ -28,7 +28,7 @@ and \©ode{haz} gives the estimated hazard.
 Compare different selection criteria using simulated data
 }
 \seealso{
-Other simu_wrapper: \code{\link{cv_simu_wrapper}},
-  \code{\link{design_simu}},
+Other simu_wrapper: \code{\link{ac_simu_wrapper}},
+  \code{\link{cv_simu_wrapper}}, \code{\link{design_simu}},
   \code{\link{ridge_simu_wrapper}}
 }
