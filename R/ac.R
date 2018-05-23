@@ -22,6 +22,7 @@ par2haz_ac <- function(par, J, K) {
   ext_beta <- c(0, par[(J + 1):(J + K - 1)])
   exp(outer(ext_beta, mu + ext_alpha, FUN = "+"))
 }
+#' @export
 haz2grid_ac <- function(haz, cuts_age, cuts_cohort) {
   haz %>%
     unname() %>%
@@ -33,11 +34,13 @@ haz2grid_ac <- function(haz, cuts_age, cuts_cohort) {
                                right = FALSE, dig.lab = 4))[matrix(cohort)]) %>%
     mutate(cohort = factor(cohort, levels = unique(cohort)))
 }
+#' @export
 par2grid_ac <- function(par, cuts_age, cuts_cohort) {
   J <- length(cuts_age) + 1
   K <- length(cuts_cohort) + 1
   par2haz_ac(par, J, K) %>% haz2grid_ac(cuts_age, cuts_cohort)
 }
+#' @export
 par2haz_ac <- function(par, J, K) {
   if (length(par) != J + K - 1) stop("Error: length of param not equal to J + K - 1")
   mu <- par[1]
