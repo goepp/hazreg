@@ -4,7 +4,8 @@
 \alias{map_maker}
 \title{Create two dimensional hazard rate from Age-Cohort-Interaction model}
 \usage{
-map_maker(mu, age_coef, cohort_coef, age_seq, cohort_seq, islet_ls = NULL)
+map_maker(mu, age_coef, cohort_coef, age_seq, cohort_seq,
+  islet_ls = NULL)
 }
 \arguments{
 \item{mu}{Constant part of the log-hazard}

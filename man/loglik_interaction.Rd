@@ -31,3 +31,4 @@ par <- rnorm(J * K)
 loglik_interaction(par, O, R)
 }
 }
+\concept{interaction_likelihood}

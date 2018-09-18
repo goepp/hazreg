@@ -36,3 +36,4 @@ Other ac_likelihood: \code{\link{hessian_ac}},
   \code{\link{hessian_interaction}},
   \code{\link{loglik_ac}}, \code{\link{solver_ac}}
 }
+\concept{ac_likelihood}

@@ -28,3 +28,4 @@ Other simu_wrapper: \code{\link{ac_simu_wrapper}},
   \code{\link{cv_simu_wrapper}},
   \code{\link{ridge_simu_wrapper}}
 }
+\concept{simu_wrapper}

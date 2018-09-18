@@ -231,7 +231,7 @@ solve_ssdp <- function(mat, vect) {
   result
 }
 #' @export
-build.jt <- function(g, verbose = FALSE) {
+build_jt <- function(g, verbose = FALSE) {
   # clique and separator sets
   N <- 0
   order <- NULL

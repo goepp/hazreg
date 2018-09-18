@@ -9,8 +9,8 @@
 ridge_solver_aci(O, R, pen, weights_age = NULL, weights_cohort = NULL,
   old_par = NULL, use_band = FALSE, maxiter = 100)
 
-aridge_solver_aci(O, R, pen, sample_size, use_band = FALSE, maxiter = 1000,
-  verbose = FALSE)
+aridge_solver_aci(O, R, pen, sample_size, use_band = FALSE,
+  maxiter = 1000, verbose = FALSE)
 }
 \arguments{
 \item{O}{Observed events as returned by \code{\link{exhaustive_stat_2d}}}
@@ -57,3 +57,5 @@ Other ridge: \code{\link{ridge_solver_interaction}}
 
 Other adaptive_ridge: \code{\link{ridge_solver_interaction}}
 }
+\concept{adaptive_ridge}
+\concept{ridge}

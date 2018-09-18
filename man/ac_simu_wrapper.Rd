@@ -14,3 +14,4 @@ Other simu_wrapper: \code{\link{criterion_simu_wrapper}},
   \code{\link{cv_simu_wrapper}}, \code{\link{design_simu}},
   \code{\link{ridge_simu_wrapper}}
 }
+\concept{simu_wrapper}

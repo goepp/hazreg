@@ -4,7 +4,8 @@
 \alias{score_interaction}
 \title{First order derivate of the negative lok-likelihood in the interaction model}
 \usage{
-score_interaction(par, O, R, pen, weights_age = NULL, weights_cohort = NULL)
+score_interaction(par, O, R, pen, weights_age = NULL,
+  weights_cohort = NULL)
 }
 \arguments{
 \item{par}{parameters of the interaction model in the form \code{as.vector(eta)}}
@@ -31,3 +32,4 @@ par <- rnorm(J * K)
 score_interaction(par, O, R)
 }
 }
+\concept{likelihood_likelihood}

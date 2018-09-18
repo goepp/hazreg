@@ -4,7 +4,8 @@
 \alias{ridge_simu_wrapper}
 \title{Run the interaction model with ridge regularization on simulated data}
 \usage{
-ridge_simu_wrapper(ind_wrapper, design, sample_df, pen_vect, scaled_ground_haz)
+ridge_simu_wrapper(ind_wrapper, design, sample_df, pen_vect,
+  scaled_ground_haz)
 }
 \description{
 Run the interaction model with ridge regularization on simulated data
@@ -14,3 +15,4 @@ Other simu_wrapper: \code{\link{ac_simu_wrapper}},
   \code{\link{criterion_simu_wrapper}},
   \code{\link{cv_simu_wrapper}}, \code{\link{design_simu}}
 }
+\concept{simu_wrapper}

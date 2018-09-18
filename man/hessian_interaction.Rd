@@ -37,3 +37,4 @@ Other ac_likelihood: \code{\link{hessian_ac}},
   \code{\link{loglik_ac}}, \code{\link{score_ac}},
   \code{\link{solver_ac}}
 }
+\concept{ac_likelihood}

@@ -58,3 +58,5 @@ Other ridge: \code{\link{ridge_solver_aci}}
 
 Other adaptive_ridge: \code{\link{ridge_solver_aci}}
 }
+\concept{adaptive_ridge}
+\concept{ridge}
