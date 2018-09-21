@@ -57,6 +57,17 @@ par_sel2par_aci <- function(par_sel, sel) {
   c(par_sel[1:(J + K - 1)], interaction)
 }
 #' @export
+haz_aci2i <- function(par, sel, J, K,
+                      cohort_tab_center = NULL,
+                      age_tab_center = NULL) {
+  par_i <- par_sel2par_aci(par, sel) *
+    (1:(K * J) >= (J + K))
+  par2haz_aci(par_i, J, K) %>%
+    '['(-1, -1) %>%
+    'dimnames<-'(list(cohort_tab_center[-1],
+                      age_tab_center[-1]))
+}
+#' @export
 valve2sel_aci <- function(valve_age, valve_cohort, epsilon = 1e-8) {
   if (any(dim(valve_age) != dim(valve_cohort))) {
     stop("Error: dimensions of valve matrices must agree")
