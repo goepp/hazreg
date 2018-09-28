@@ -292,3 +292,8 @@ build_jt <- function(g, verbose = FALSE) {
        connect = connect, graph = jt, N = N,
        treewidth = max(unlist(lapply(C, length))))
 }
+countfillin <- function(g) {
+  n <- vcount(g)
+  m <- ecount(g)
+  return(n * (n - 1)/2 - m)
+}
