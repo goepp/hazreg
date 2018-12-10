@@ -150,14 +150,14 @@ loglik <- function(par, gamma, sigma_sq, K, pen) {
 hessian <- function(par, gamma, sigma_sq, K, pen) {
   diag(1 / sigma_sq) +
     2 * pen * K -
-    2 * pen * diag(rowSums(K))
+    2 * pen * diag(Matrix::rowSums(K))
 }
 #' @export
 score <- function(par, gamma, sigma_sq, K, pen) {
   pen_matrix <- (replicate(length(par), par) - t(replicate(length(par), par))) *
     K
   as.vector(
-    (par - gamma) / sigma_sq - 2 * pen * rowSums(pen_matrix)
+    (par - gamma) / sigma_sq - 2 * pen * Matrix::rowSums(pen_matrix)
   )
 }
 #' @export
