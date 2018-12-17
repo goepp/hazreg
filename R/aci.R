@@ -617,8 +617,8 @@ aridge_solver_aci <- function(O, R, pen, sample_size,
   weights_age <- matrix(1, K - 1, J - 1)
   weights_cohort <- matrix(1, K - 1, J - 1)
   valve_age <- matrix(1, K - 1, J - 1) %>%
-    "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-", colnames(O)[-J]))) %>%
-    "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-", rownames(O)[-J])))
+    "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-", rownames(O)[-J]))) %>%
+    "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-", colnames(O)[-J])))
   valve_cohort <- matrix(1, K - 1, J - 1) %>%
     "rownames<-"(diag(sapply(rownames(O)[-1], paste0, "-", rownames(O)[-J]))) %>%
     "colnames<-"(diag(sapply(colnames(O)[-1], paste0, "-", colnames(O)[-J])))
