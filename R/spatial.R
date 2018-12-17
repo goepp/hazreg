@@ -184,8 +184,9 @@ solver_nr <- function(gamma, sigma_sq, K,
 #' @export
 solver_graph_aridge <- function(gamma, sigma_sq, adj,
                                 pen = 10 ^ seq(-4, 4, length = 100),
-                                maxiter = 1000,
-                                epsilon = 1e-5, thresh = 1e-8) {
+                                maxiter = 10000,
+                                epsilon = 1e-5,
+                                thresh = 1e-8) {
   par_ls <- vector("list", length(pen))
   bic <- bic_1 <- bic_2 <- pen * 0
   X <-  diag(length(gamma)) %>%
