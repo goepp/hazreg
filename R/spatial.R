@@ -59,7 +59,7 @@ solver_aridge_lambda <- function(y, X, touches, lambda = 10 ^ -0.5, maxiter = 10
 solver_aridge <- function(
   y, X, adj, lambda = 10 ^ seq(-2, 2, length = 50),
   maxiter = 100, epsilon = 1e-5, thresh = 1e-8
-  ) {
+) {
   par_ls <- vector("list", length = length(lambda))
   weight_adj <- adj
   theta <- rep(0, ncol(X))
@@ -99,9 +99,9 @@ solver_aridge <- function(
 }
 #' @export
 solver_graph_aridge_old <- function(gamma, sigma_sq, adj,
-                                 lambda = 10 ^ seq(-4, 4, length = 100),
-                                 maxiter = 1000,
-                                 epsilon = 1e-5, thresh = 1e-8) {
+                                    lambda = 10 ^ seq(-4, 4, length = 100),
+                                    maxiter = 1000,
+                                    epsilon = 1e-5, thresh = 1e-8) {
   X <-  diag(length(gamma)) %>%
     # Matrix(sparse = TRUE) %>%
     "colnames<-"(colnames(adj))
@@ -169,7 +169,7 @@ solver_nr <- function(gamma, sigma_sq, K,
     old_par <- par
     if (any(is(K) %in% "sparseMatrix")) {
       par <- old_par - solve_ssdp(hessian(old_par, gamma, sigma_sq, K, pen),
-                             score(old_par, gamma, sigma_sq, K, pen))
+                                  score(old_par, gamma, sigma_sq, K, pen))
     } else {
       par <- old_par - Solve(hessian(old_par, gamma, sigma_sq, K, pen),
                              score(old_par, gamma, sigma_sq, K, pen))
@@ -188,7 +188,7 @@ solver_graph_aridge <- function(gamma, sigma_sq, adj,
                                 epsilon = 1e-5,
                                 thresh = 1e-8) {
   par_ls <- vector("list", length(pen))
-  bic <- bic_1 <- bic_2 <- pen * 0
+  bic <- bic_1 <- bic_2 <- laplace_bic <- pen * 0
   X <-  diag(length(gamma)) %>%
     "colnames<-"(colnames(adj))
   weight_adj <- adj
@@ -217,12 +217,14 @@ solver_graph_aridge <- function(gamma, sigma_sq, adj,
         2 * loglik(par_ls[[ind]], gamma, sigma_sq, K, pen = 0)
       bic_1[ind] <- log(length(gamma)) * ncol(X_sel)
       bic_2[ind] <- 2 * loglik(par_ls[[ind]], gamma, sigma_sq, K, pen = 0)
+      laplace_bic[ind] <- bic - ncol(X_sel) * log(2 * pi) - sum(log(sigma_sq))
       ind <- ind + 1
     }
     iter <- iter + 1
     if (ind > length(par_ls)) break
   }
-  list(par = par_ls, bic = bic, bic_1 = bic_1, bic_2 = bic_2)
+  list(par = par_ls, bic = bic, laplace_bic = laplace_bic,
+       bic_1 = bic_1, bic_2 = bic_2)
 }
 #' @export
 solve_ssdp <- function(mat, vect) {
