@@ -10,7 +10,7 @@ It is implemented by functions that end with `aci`
 Only the hazard rate is estimated. It is implemented by the functions that end with `interaction`.
 
 - The Spatio-Temporal Piecewise Constant Hazard Model is a novel model aimed at inferring the hazard rate as 
-a function of both time and a qualitative covariate representing the spatial location of individuals (see illustration bellow). ![some useless text](utrecht_gif.gif)
+a function of both time and a qualitative covariate representing the spatial location of individuals.
 
 All these models have in common the same approach and the same regularization method at their core. 
 This regularization is aimed at reducing overfitting as well as improve the 
